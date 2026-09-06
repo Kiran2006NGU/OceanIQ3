@@ -63,7 +63,7 @@ function SingleAnomalyRing({
         >
           <button
             onClick={() => onSelect(anomaly)}
-            title={`${anomaly.region} — ${anomaly.type} (${anomaly.anomalyValue})\nClick to focus`}
+            title={`${anomaly.region} — ${anomaly.category} (${anomaly.anomalyValue})\nClick to focus`}
             className={`group flex items-center gap-1 transition-all duration-200 cursor-pointer shadow-lg backdrop-blur-md rounded-full border ${
               isHovered
                 ? 'px-2 py-0.5 bg-red-950/90 border-red-400 text-red-100 scale-110'

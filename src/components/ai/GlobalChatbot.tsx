@@ -740,7 +740,7 @@ The Indian Ocean displays one of the most striking salinity contrasts of any glo
     // ── 9. THEMES & SITE SETTINGS ──
     if (q.includes('theme') || q.includes('color') || q.includes('dark mode') || q.includes('bioluminescence')) {
       actions.push({ label: 'Apply Bioluminescence Theme', icon: <Palette size={14} />, execute: () => setTheme('bioluminescence') })
-      actions.push({ label: 'Apply Deep Navy Theme', icon: <Palette size={14} />, execute: () => setTheme('deep-navy') })
+      actions.push({ label: 'Apply Deep Navy Theme', icon: <Palette size={14} />, execute: () => setTheme('dark') })
       actions.push({ label: 'Apply Tactical Theme', icon: <Palette size={14} />, execute: () => setTheme('tactical') })
 
       return {
