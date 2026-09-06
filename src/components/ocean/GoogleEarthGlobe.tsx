@@ -83,6 +83,8 @@ export function GoogleEarthGlobe({ onSelectRegion, selectedRegion = 'Bay of Beng
           <group key={label.name} position={[x, y, z]}>
             <Html
               center
+              occlude
+              zIndexRange={[1, 0]}
               style={{ pointerEvents: 'auto', userSelect: 'none' }}
             >
               <button

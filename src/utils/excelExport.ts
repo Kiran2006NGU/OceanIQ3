@@ -92,7 +92,7 @@ export function exportObservationsToExcel(observations: MockObservation[], filen
   addSheet(wb, [
     { Field: 'Export Date', Value: new Date().toISOString() },
     { Field: 'Platform Count', Value: observations.length },
-    { Field: 'Source', Value: 'OceanIQ — SIH 26067 | INCOIS' },
+    { Field: 'Source', Value: 'OceanIQ — INCOIS Ocean Intelligence Platform' },
     { Field: 'Coverage', Value: 'Indian Ocean' },
     { Field: 'Coordinate System', Value: 'WGS84 / EPSG:4326' },
     { Field: 'Depth Convention', Value: 'Positive downward (m)' },
@@ -129,7 +129,7 @@ export function exportArrayToExcel(
   addSheet(wb, [
     { Field: 'Export Date', Value: new Date().toISOString() },
     { Field: 'Records', Value: data.length },
-    { Field: 'Source', Value: 'OceanIQ — SIH 26067 | INCOIS' },
+    { Field: 'Source', Value: 'OceanIQ — INCOIS Ocean Intelligence Platform' },
   ], 'Info')
   downloadWorkbook(wb, filename)
 }

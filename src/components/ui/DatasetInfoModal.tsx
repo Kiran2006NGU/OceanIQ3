@@ -17,8 +17,8 @@ export function DatasetInfoModal({ isOpen, onClose }: DatasetInfoModalProps) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-      <div className="bg-[#030d1a] border border-cyan-500/30 rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col text-slate-200 overflow-hidden font-sans">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl select-none font-sans">
+      <div className="bg-[#030d1a] border border-cyan-500/40 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col text-slate-100 overflow-hidden ring-1 ring-white/10">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#051426]">
           <div className="flex items-center gap-2.5">

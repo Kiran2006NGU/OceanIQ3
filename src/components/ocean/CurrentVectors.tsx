@@ -165,35 +165,6 @@ export function CurrentVectors({
     <group>
       <instancedMesh ref={shaftRef} args={[shaftGeo, material, maxDisplayed]} />
       <instancedMesh ref={headRef} args={[headGeo, material, maxDisplayed]} />
-
-      {/* Floating vector legend */}
-      {count > 0 && (
-        <Html fullscreen style={{ pointerEvents: 'none', zIndex: 10 }}>
-          <div className="absolute right-5 bottom-24 bg-[#030d1a]/85 backdrop-blur-md border border-cyan-500/30 rounded-xl p-3 shadow-2xl select-none w-48">
-            <div className="text-[11px] font-mono font-bold text-cyan-100 mb-2 border-b border-white/10 pb-1">
-              Vector Magnitude
-            </div>
-            <div className="flex flex-col gap-1 text-[10px] font-mono text-slate-300">
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-full h-2 rounded overflow-hidden"
-                  style={{
-                    background:
-                      'linear-gradient(to right, rgb(10,56,122), rgb(31,140,199), rgb(133,204,230), rgb(250,173,64), rgb(209,20,10))',
-                  }}
-                />
-              </div>
-              <div className="flex justify-between mt-0.5">
-                <span>0.0 m/s</span>
-                <span>2.5+ m/s</span>
-              </div>
-              <div className="mt-2 text-[9px] text-slate-400">
-                Active Vectors: {count.toLocaleString()}
-              </div>
-            </div>
-          </div>
-        </Html>
-      )}
     </group>
   )
 }

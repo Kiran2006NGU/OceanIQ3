@@ -228,23 +228,81 @@ export function DashboardPage() {
                   key={v.id}
                   onClick={() => {
                     state.setSelectedVariable(v.id)
-                    if (v.id === 'current_velocity') {
-                      state.batchSetLayers({ currentVectors: true, currentStreamlines: true, valueLabels: true })
-                    } else if (v.id === 'sea_level') {
-                      state.batchSetLayers({ seaLevel: true, valueLabels: true })
-                    } else if (v.id === 'chlorophyll') {
-                      state.batchSetLayers({ phytoplankton: true, pfzFish: true, valueLabels: true })
+                    if (v.id === 'temperature') {
+                      state.batchSetLayers({
+                        oceanModel: true,
+                        depthSlice: true,
+                        currentVectors: false,
+                        currentStreamlines: false,
+                        seaLevel: false,
+                        phytoplankton: false,
+                        zooplankton: false,
+                        pfzFish: false,
+                        valueLabels: true,
+                      })
                     } else if (v.id === 'salinity') {
-                      state.batchSetLayers({ oceanModel: true, depthSlice: true, valueLabels: true })
-                    } else {
-                      state.batchSetLayers({ oceanModel: true, valueLabels: true })
+                      state.batchSetLayers({
+                        oceanModel: true,
+                        depthSlice: true,
+                        currentVectors: false,
+                        currentStreamlines: false,
+                        seaLevel: false,
+                        phytoplankton: false,
+                        zooplankton: false,
+                        pfzFish: false,
+                        valueLabels: true,
+                      })
+                    } else if (v.id === 'current_velocity') {
+                      state.batchSetLayers({
+                        oceanModel: true,
+                        depthSlice: false,
+                        currentVectors: true,
+                        currentStreamlines: true,
+                        seaLevel: false,
+                        phytoplankton: false,
+                        zooplankton: false,
+                        pfzFish: false,
+                        valueLabels: true,
+                      })
+                    } else if (v.id === 'chlorophyll') {
+                      state.batchSetLayers({
+                        oceanModel: true,
+                        depthSlice: false,
+                        phytoplankton: true,
+                        zooplankton: true,
+                        pfzFish: true,
+                        currentVectors: false,
+                        currentStreamlines: false,
+                        seaLevel: false,
+                        valueLabels: true,
+                      })
+                    } else if (v.id === 'sea_level') {
+                      state.batchSetLayers({
+                        oceanModel: true,
+                        depthSlice: false,
+                        seaLevel: true,
+                        currentVectors: false,
+                        currentStreamlines: false,
+                        phytoplankton: false,
+                        zooplankton: false,
+                        pfzFish: false,
+                        valueLabels: true,
+                      })
                     }
                   }}
                   title={v.desc}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-mono text-xs transition-all cursor-pointer whitespace-nowrap ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-mono text-xs transition-all cursor-pointer whitespace-nowrap shadow-md ${
                     isSelected
-                      ? 'bg-cyan-500 text-black font-bold shadow-lg shadow-cyan-500/30 border border-white/40 scale-105'
-                      : 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10'
+                      ? v.id === 'temperature'
+                        ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-black font-bold shadow-orange-500/40 border border-orange-300 ring-2 ring-orange-400/40 scale-105'
+                        : v.id === 'salinity'
+                        ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-bold shadow-cyan-500/40 border border-cyan-200 ring-2 ring-cyan-400/40 scale-105'
+                        : v.id === 'current_velocity'
+                        ? 'bg-gradient-to-r from-indigo-400 to-sky-400 text-black font-bold shadow-indigo-500/40 border border-indigo-200 ring-2 ring-indigo-400/40 scale-105'
+                        : v.id === 'chlorophyll'
+                        ? 'bg-gradient-to-r from-emerald-400 to-teal-400 text-black font-bold shadow-emerald-500/40 border border-emerald-200 ring-2 ring-emerald-400/40 scale-105'
+                        : 'bg-gradient-to-r from-sky-400 to-cyan-400 text-black font-bold shadow-sky-500/40 border border-sky-200 ring-2 ring-sky-400/40 scale-105'
+                      : 'bg-[#0b1322] hover:bg-[#12233b] text-slate-200 hover:text-white border border-white/15'
                   }`}
                 >
                   <span className="text-sm">{v.icon}</span>
@@ -354,7 +412,7 @@ export function DashboardPage() {
             <DataIngestionWizard onClose={() => setShowIngestionWizard(false)} />
           )}
           {/* 3D Scene Viewport */}
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 isolate">
             <OceanScene
               selectedVariable={state.selectedVariable}
               selectedDepth={state.selectedDepth}

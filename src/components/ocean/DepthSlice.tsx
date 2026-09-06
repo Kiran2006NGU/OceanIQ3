@@ -264,7 +264,7 @@ export function DepthSlice({
 
       {/* ── 4. Floating 3D Depth Indicator Badge ──────────────────────────── */}
       <group position={[discRadius * 0.88, discRadius * 0.35, 0.02]} rotation={[-Math.PI / 2, 0, 0]}>
-        <Html center style={{ pointerEvents: 'none', userSelect: 'none' }}>
+        <Html center occlude zIndexRange={[1, 0]} style={{ pointerEvents: 'none', userSelect: 'none' }}>
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#020b18]/90 border border-cyan-400/50 shadow-lg text-[10px] font-mono whitespace-nowrap backdrop-blur-sm">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
             <span className="font-bold text-cyan-200">

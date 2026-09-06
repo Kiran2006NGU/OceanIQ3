@@ -180,7 +180,7 @@ async function samudraFetch<T>(endpoint: string, params?: Record<string, string>
       headers: {
         Authorization: `Bearer ${SAMUDRA_API_KEY}`,
         Accept: 'application/json',
-        'X-Platform': 'OceanIQ-SIH26067',
+        'X-Platform': 'OceanIQ-INCOIS',
       },
       signal: AbortSignal.timeout(10000),
     })

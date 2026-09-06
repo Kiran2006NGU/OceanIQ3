@@ -1,12 +1,13 @@
 /**
  * Navbar.tsx — Clean Scientific Navigation Bar
- * SIH 26067 | OceanIQ — Indian Ocean 3D Intelligence Platform
+ * OceanIQ — Indian Ocean 3D Intelligence Platform | INCOIS / MoES
  *
  * Includes:
  * - Streamlined 5 primary scientific workspaces
  * - "More" resource dropdown for Data Hub, Diagnostics, Providers, and Docs
  * - 1-Click Multi-Theme Switcher (🌙 Dark / ☀️ Light / 🛰️ Tactical)
  * - 1-Click User Role Switcher (👤 Citizen / 🔬 Scientist / 🛡️ Operator)
+ * - User Profile chip with logout
  */
 
 import { useState, useRef, useEffect } from 'react'
@@ -16,6 +17,8 @@ import { useUserRole } from '@/context/UserRoleContext'
 import { useChatbot } from '@/context/ChatbotContext'
 import { cn } from '@/utils/cn'
 import { ThemePicker } from '@/components/ui/ThemePicker'
+import { useAuth } from '@/context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import {
   Waves,
   Globe,
@@ -32,6 +35,8 @@ import {
   Menu,
   X,
   Bot,
+  LogOut,
+  User,
 } from 'lucide-react'
 
 const ICON_MAP: Record<string, React.ReactNode> = {
@@ -50,6 +55,8 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 export function Navbar() {
   const { roleInfo, cycleRole } = useUserRole()
   const { openChatbot } = useChatbot()
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
 
   const [moreOpen, setMoreOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -182,6 +189,21 @@ export function Navbar() {
 
           {/* Theme Picker (dropdown with 6 themes) */}
           <ThemePicker />
+
+          {/* User Profile chip */}
+          {user && (
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-mono">
+              <User size={12} className="text-cyan-400 flex-shrink-0" />
+              <span className="text-slate-300 max-w-[80px] truncate" title={user.name}>{user.name}</span>
+              <button
+                onClick={() => { logout(); navigate('/login', { replace: true }) }}
+                title="Logout"
+                className="ml-1 p-0.5 rounded text-slate-500 hover:text-red-400 transition-colors cursor-pointer"
+              >
+                <LogOut size={11} />
+              </button>
+            </div>
+          )}
 
           {/* Mobile menu button */}
           <button

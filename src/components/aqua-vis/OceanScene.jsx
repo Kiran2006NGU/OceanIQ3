@@ -242,8 +242,8 @@ export default function OceanScene() {
 
     // Base Earth Globe
     const earthGeo = new THREE.SphereGeometry(R, 64, 64)
-    // High-res static Earth texture (NASA Blue Marble / Equirectangular) to prevent missing poles
-    const earthUrl = `https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg`
+    // High-res static Earth texture (NASA Blue Marble / Equirectangular)
+    const earthUrl = '/textures/earth-blue-marble.jpg'
     const earthTex = new THREE.TextureLoader().load(earthUrl)
     earthTex.colorSpace = THREE.SRGBColorSpace
     const earthMat = new THREE.MeshBasicMaterial({ map: earthTex })

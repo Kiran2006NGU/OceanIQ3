@@ -50,11 +50,25 @@ class OceanService:
         datasets = self.registry.list_datasets()
         real_count = sum(1 for d in datasets if d.is_real_data)
         data_source_mode = f"Multi-Source Provider ({len(datasets)} datasets, {real_count} real INCOIS/Argo)"
+
+        from app.services.anomaly_service import get_moment_service
+        from app.services.assistant_service import get_assistant_service
+        from app.services.ocean_prediction_service import get_samudra_service
+
+        moment_status = get_moment_service().get_status()
+        qwen_status = get_assistant_service().get_status()
+        samudra_status = get_samudra_service().get_status()
+
         return HealthResponse(
             status="ok",
             service="SIH 26067 Ocean Backend",
             version=API_VERSION,
             data_source=data_source_mode,
+            models={
+                "moment": moment_status,
+                "qwen": qwen_status,
+                "samudra2": samudra_status,
+            },
         )
 
     # ── Dataset Catalog ────────────────────────────────────────────────────────

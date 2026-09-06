@@ -61,9 +61,9 @@ export function AquaGlobe({
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const textureRef = useRef<THREE.CanvasTexture | null>(null)
 
-  // ── 1. High-Definition Satellite Earth Texture ─────────────────────────────
+  // ── 1. High-Definition Satellite Earth Texture (Local Asset) ──────────────
   const earthTexture = useMemo(() => {
-    const tex = new THREE.TextureLoader().load('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+    const tex = new THREE.TextureLoader().load('/textures/earth-blue-marble.jpg')
     tex.colorSpace = THREE.SRGBColorSpace
     return tex
   }, [])
@@ -93,16 +93,16 @@ export function AquaGlobe({
   // ── 3. Dynamic Ocean Physics Canvas Texture (Strict Coastlines) ─────────────
   const { texture } = useMemo(() => {
     const cvs = document.createElement('canvas')
-    cvs.width = 1024
-    cvs.height = 512
+    cvs.width = 512
+    cvs.height = 256
     const ctx = cvs.getContext('2d', { willReadFrequently: true })
     if (ctx) {
-      ctx.imageSmoothingEnabled = false
+      ctx.imageSmoothingEnabled = true
     }
 
     const tex = new THREE.CanvasTexture(cvs)
-    tex.minFilter = THREE.NearestFilter
-    tex.magFilter = THREE.NearestFilter
+    tex.minFilter = THREE.LinearFilter
+    tex.magFilter = THREE.LinearFilter
     tex.wrapS = THREE.ClampToEdgeWrapping
     tex.wrapT = THREE.ClampToEdgeWrapping
     tex.generateMipmaps = false
@@ -177,22 +177,46 @@ export function AquaGlobe({
             )
             val = field.values[latIdx * field.nlon + lonIdx] ?? 27.5
           } else {
-            // High-fidelity analytical physics distribution
+            // High-fidelity analytical physics distribution for Indian Ocean Basin
             if (selectedVariable === 'temperature') {
               // Warm pool in Bay of Bengal & Arabian Sea (28.5-30.5°C), cool Somali/Oman upwelling (22.5°C)
-              const tropicalWarm = 29.2 * Math.exp(-Math.pow(lat - 10, 2) / 650)
-              const upwelling = -3.8 * Math.exp(-Math.pow(lat - 12, 2) / 40 - Math.pow(lon - 55, 2) / 50)
-              const depthDecay = Math.exp(-selectedDepth / 340.0)
-              val = 4.2 + (tropicalWarm + upwelling - 4.2) * depthDecay
+              const tropicalWarm = 29.5 * Math.exp(-Math.pow(lat - 10, 2) / 600)
+              const upwelling = -4.8 * Math.exp(-Math.pow(lat - 11, 2) / 35 - Math.pow(lon - 54, 2) / 45)
+              const depthDecay = Math.exp(-selectedDepth / 320.0)
+              val = 4.0 + (tropicalWarm + upwelling - 4.0) * depthDecay
             } else if (selectedVariable === 'salinity') {
-              // High Arabian Sea (36.5 PSU) vs Low Bay of Bengal (32.5 PSU)
-              const salGrad = 35.2 + 1.4 * Math.cos(((lon - 60) * Math.PI) / 40.0)
-              const depthDecay = Math.exp(-selectedDepth / 420.0)
-              val = 34.7 + (salGrad - 34.7) * depthDecay
+              // High Arabian Sea (36.5 PSU) vs Low Bay of Bengal (32.0 PSU) due to monsoon runoff
+              const arabsHigh = 36.6 * Math.exp(-Math.pow(lat - 16, 2) / 220 - Math.pow(lon - 64, 2) / 320)
+              const bobFresh = -3.6 * Math.exp(-Math.pow(lat - 18, 2) / 100 - Math.pow(lon - 89, 2) / 100)
+              const baseSal = 34.8 + 0.6 * Math.cos(((lon - 70) * Math.PI) / 60.0)
+              const depthDecay = Math.exp(-selectedDepth / 450.0)
+              const surfaceSal = Math.max(31.0, Math.min(37.5, (arabsHigh || baseSal) + bobFresh))
+              val = 34.6 + (surfaceSal - 34.6) * depthDecay
+            } else if (selectedVariable === 'current_velocity') {
+              // High-speed Somali Jet (2.2 m/s), Equatorial Wyrtki Jet (1.6 m/s), EICC (1.2 m/s)
+              const somaliJet = 2.2 * Math.exp(-Math.pow(lat - 9, 2) / 40 - Math.pow(lon - 53, 2) / 45)
+              const wyrtkiJet = 1.6 * Math.exp(-Math.pow(lat, 2) / 20 - Math.pow(lon - 80, 2) / 500)
+              const eicc = 1.2 * Math.exp(-Math.pow(lat - 14, 2) / 35 - Math.pow(lon - 83, 2) / 25)
+              const baseSpeed = 0.2 + 0.15 * Math.sin(lat * 0.2 + lon * 0.1)
+              const depthDecay = Math.exp(-selectedDepth / 220.0)
+              val = Math.min(2.5, (somaliJet + wyrtkiJet + eicc + baseSpeed) * depthDecay)
             } else if (selectedVariable === 'chlorophyll') {
-              val = 0.45 * Math.exp(-Math.pow(lat - 15, 2) / 80 - Math.pow(lon - 88, 2) / 90) * Math.exp(-selectedDepth / 75)
+              // High Euphotic Biomass Blooms (Northern BoB Delta, Sri Lanka Dome, Arabian Sea upwelling)
+              const deltaBloom = 3.8 * Math.exp(-Math.pow(lat - 19, 2) / 45 - Math.pow(lon - 89, 2) / 55)
+              const srilankaDome = 2.8 * Math.exp(-Math.pow(lat - 7.5, 2) / 25 - Math.pow(lon - 83, 2) / 30)
+              const somaliBloom = 3.2 * Math.exp(-Math.pow(lat - 12, 2) / 40 - Math.pow(lon - 54, 2) / 45)
+              const malabarBloom = 2.4 * Math.exp(-Math.pow(lat - 10, 2) / 30 - Math.pow(lon - 75.5, 2) / 20)
+              const baseChl = 0.18 + 0.08 * Math.sin(lat * 0.3)
+              const depthDecay = Math.exp(-selectedDepth / 65.0)
+              val = Math.min(5.0, (deltaBloom + srilankaDome + somaliBloom + malabarBloom + baseChl) * depthDecay)
+            } else if (selectedVariable === 'sea_level' || selectedVariable === 'sea_surface_height') {
+              // Sea Surface Height Anomaly (cm): +25cm warm eddy cores, -20cm cold upwelling
+              const eddy1 = 18.5 * Math.sin((lat * Math.PI) / 25) * Math.cos(((lon - 85) * Math.PI) / 30)
+              const eddy2 = -15.0 * Math.exp(-Math.pow(lat - 11, 2) / 40 - Math.pow(lon - 55, 2) / 45)
+              const eqBelt = 12.0 * Math.exp(-Math.pow(lat, 2) / 35)
+              val = Math.max(-30, Math.min(30, eddy1 + eddy2 + eqBelt))
             } else {
-              val = 1.2 * Math.exp(-Math.pow(lat - 8, 2) / 30 - Math.pow(lon - 52, 2) / 30) * Math.exp(-selectedDepth / 250)
+              val = 1.0 * Math.exp(-Math.pow(lat - 8, 2) / 30 - Math.pow(lon - 52, 2) / 30)
             }
           }
 
@@ -284,11 +308,13 @@ export function AquaGlobe({
           <group key={label.name} position={[x, y, z]}>
             <Html
               center
-              style={{ pointerEvents: 'auto', userSelect: 'none' }}
+              occlude
+              zIndexRange={[1, 0]}
+              style={{ pointerEvents: 'none', userSelect: 'none' }}
             >
               <div
                 className={[
-                  'text-center font-sans whitespace-nowrap',
+                  'text-center font-sans whitespace-nowrap pointer-events-none select-none',
                   isOcean
                     ? 'text-[11px] italic font-medium tracking-wider text-cyan-200/80 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]'
                     : 'text-[10px] font-semibold tracking-wide text-slate-200/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.95)]',

@@ -8,7 +8,7 @@ by FastAPI automatically.
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 from pydantic import BaseModel, Field
 
 
@@ -19,6 +19,30 @@ class HealthResponse(BaseModel):
     service: str = "SIH 26067 Ocean Backend"
     version: str
     data_source: str
+    models: Optional[dict[str, Any]] = None
+
+
+# ── AI Models Integration ──────────────────────────────────────────────────────
+
+class AnomalyDetectRequest(BaseModel):
+    values: list[float] = Field(..., description="1D time-series numerical observations")
+    variable: str = Field("temperature", description="Ocean variable name (temperature, salinity, current_velocity, chlorophyll)")
+    timestamp: Optional[str] = Field(None, description="ISO timestamp for observation point")
+    threshold_critical: Optional[float] = Field(2.5, description="Z-score / MSE threshold for Critical alert")
+    threshold_warning: Optional[float] = Field(1.4, description="Threshold for Warning alert")
+
+
+class AssistantQueryRequest(BaseModel):
+    query: str = Field(..., description="Natural language ocean query")
+
+
+class OceanPredictRequest(BaseModel):
+    latitude: float = Field(..., ge=-35.0, le=35.0)
+    longitude: float = Field(..., ge=35.0, le=110.0)
+    depth: float = Field(0.0, ge=0.0, le=3000.0)
+    current_velocity: Optional[float] = Field(0.5, ge=0.0, le=10.0)
+    month: Optional[int] = Field(8, ge=1, le=12)
+    observed_temp: Optional[float] = None
 
 
 # ── Provenance & Quality Control ───────────────────────────────────────────────

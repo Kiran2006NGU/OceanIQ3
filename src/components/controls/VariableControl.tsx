@@ -92,6 +92,19 @@ const CATEGORIES: {
       },
     ],
   },
+  {
+    title: 'Altimetry & Sea Level',
+    variables: [
+      {
+        id: 'sea_level',
+        label: 'Sea Surface Height Anomaly (SSHA)',
+        unit: 'cm',
+        range: '−30.0 – 30.0 cm',
+        icon: <Compass size={13} />,
+        color: '#0ea5e9',
+      },
+    ],
+  },
 ]
 
 export function VariableControl({ selectedVariable, onChange }: VariableControlProps) {

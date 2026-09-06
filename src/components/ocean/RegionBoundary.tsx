@@ -147,7 +147,7 @@ export function RegionBoundary({ selectedRegion, visible = true }: RegionBoundar
       {/* ── Corner Coordinate HUD Labels ── */}
       {cornerTags.map((tag, idx) => (
         <group key={idx} position={tag.pos as [number, number, number]}>
-          <Html style={{ pointerEvents: 'none', userSelect: 'none' }}>
+          <Html occlude zIndexRange={[1, 0]} style={{ pointerEvents: 'none', userSelect: 'none' }}>
             <div className="px-1.5 py-0.5 rounded bg-[#030a16]/90 border border-cyan-500/30 text-[8px] font-mono text-cyan-300 shadow-md whitespace-nowrap">
               {tag.text}
             </div>

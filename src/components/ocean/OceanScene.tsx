@@ -241,7 +241,8 @@ export function OceanScene({
         <GlobeValueLabels
           selectedVariable={selectedVariable}
           selectedDepth={selectedDepth}
-          selectedTimeIso={selectedTime.iso}
+          selectedTimeIso={selectedTime?.isoString}
+          selectedTimeIndex={selectedTimeIndex}
           visible={visibleLayers.valueLabels}
         />
       )}
@@ -316,8 +317,8 @@ export function OceanScene({
       {/* ── 3D Pulsing Crosshair on Selected Model Point ── */}
       <SelectionTarget measurement={selectedMeasurement ?? null} />
 
-      {/* ── AI Threat Anomaly Pulsing Rings ── */}
-      {onSelectAnomaly && <AnomalyMarkers onSelectAnomaly={onSelectAnomaly} />}
+      {/* ── AI Threat Anomaly Pulsing Rings (Hidden during portion selection) ── */}
+      {onSelectAnomaly && !isSelectingPortion && <AnomalyMarkers onSelectAnomaly={onSelectAnomaly} />}
 
       {/* ── Interactive 4-Sided Portion Drag Selector ── */}
       {isSelectingPortion && onPortionSelected && (

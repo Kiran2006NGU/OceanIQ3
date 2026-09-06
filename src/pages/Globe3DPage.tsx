@@ -96,7 +96,7 @@ export function Globe3DPage() {
       )}
 
       {/* Main 3D Canvas */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative isolate">
         <OceanScene
           selectedVariable={state.selectedVariable}
           selectedDepth={state.selectedDepth}

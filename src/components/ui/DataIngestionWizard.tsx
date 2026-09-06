@@ -311,7 +311,7 @@ export function DataIngestionWizard({ onClose, onIngest }: DataIngestionWizardPr
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm animate-fade-in p-4">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-xl animate-fade-in p-4 select-none font-mono">
       <div className="bg-[#0a1324] border border-white/15 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden font-mono">
 
         {/* Header */}

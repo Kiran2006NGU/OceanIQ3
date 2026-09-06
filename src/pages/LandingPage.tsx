@@ -133,7 +133,7 @@ export function LandingPage() {
         <div className="mx-auto max-w-6xl text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/40 text-cyan-300 text-xs font-mono font-semibold mb-6 shadow-sm shadow-cyan-900/40">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-            SIH 26067 · Digital Twin of the Indian Ocean
+            INCOIS · Digital Twin of the Indian Ocean
           </div>
 
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-cyan-400 mb-5">
@@ -303,7 +303,7 @@ export function LandingPage() {
             <span className="text-slate-300 font-bold">{APP_CONFIG.name}</span>
             <span>· {APP_CONFIG.buildId}</span>
           </div>
-          <div>Smart India Hackathon 2026 · Ministry of Earth Sciences (MoES) / INCOIS</div>
+          <div>Ocean Intelligence Platform · Ministry of Earth Sciences (MoES) / INCOIS</div>
         </div>
       </footer>
     </div>

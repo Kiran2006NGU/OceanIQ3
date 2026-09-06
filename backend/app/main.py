@@ -86,8 +86,9 @@ app.include_router(datasets.router,     prefix=API_PREFIX)
 app.include_router(ocean.router,        prefix=API_PREFIX)
 app.include_router(observations.router, prefix=API_PREFIX)
 app.include_router(comparison.router,   prefix=API_PREFIX)
-app.include_router(ai_router.router,     prefix=API_PREFIX)
-app.include_router(aqua_vis.router,     prefix="/api")
+app.include_router(ai_router.router,        prefix=API_PREFIX)
+app.include_router(ai_router.direct_router, prefix=API_PREFIX)
+app.include_router(aqua_vis.router,        prefix="/api")
 
 
 

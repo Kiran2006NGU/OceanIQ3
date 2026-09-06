@@ -195,6 +195,7 @@ export function CurrentStreamlines({ visible = true }: CurrentStreamlinesProps) 
     <group>
       {/* ── Semi-transparent background curve paths ── */}
       {lineGeometries.map((geo, idx) => (
+        // @ts-expect-error R3F line element geometry
         <line key={idx} geometry={geo}>
           <lineBasicMaterial
             color={curves[idx].def.color}

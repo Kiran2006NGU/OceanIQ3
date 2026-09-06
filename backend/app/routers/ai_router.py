@@ -1,18 +1,32 @@
 """
-backend/app/routers/ai_router.py — AI / ML Ocean Intelligence & Anomaly Engine
-SIH 26067 | Ocean Intelligence Platform Backend
+backend/app/routers/ai_router.py — AI / ML Ocean Intelligence & Foundation Models Engine
+SIH 26067 | OceanIQ — Indian Ocean 3D Intelligence Platform
 
 Endpoints:
-- GET  /api/v1/ai/anomalies: Compute real marine heatwaves, velocity jets & halocline anomalies
-- POST /api/v1/ai/predict: Physics-Guided ML Sea Surface Temperature Downscaler & Bias Estimator
+- POST /api/v1/ai/anomalies/detect: Real time-series anomaly detection via AutonLab/MOMENT-1-small (Local CPU)
+- POST /api/v1/ai/assistant/query: Natural Language Ocean Query Parser (Qwen3-4B Interface & Demo NLP Engine)
+- POST /api/v1/ai/predict: Ocean State & Bias Predictor (Samudra2 Interface & PINN-lite Surrogate)
+- GET  /api/v1/ai/anomalies: Active Indian Ocean climatological anomaly alerts
+- GET  /api/v1/ai/models: Live Model Registry diagnostics & hardware availability
 """
 
 from __future__ import annotations
 
-import math
+import logging
 from typing import Any, Optional
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
+
+from app.models.ocean import (
+    AnomalyDetectRequest,
+    AssistantQueryRequest,
+    OceanPredictRequest,
+)
+from app.services.anomaly_service import get_moment_service
+from app.services.assistant_service import get_assistant_service
+from app.services.ocean_prediction_service import get_samudra_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ai", tags=["AI / ML Ocean Intelligence"])
 
@@ -27,53 +41,108 @@ CLIMATOLOGY_BASELINES: dict[str, dict[str, float]] = {
 }
 
 
-class AnomalyResponse(BaseModel):
-    id: str
-    title: str
-    category: str
-    region: str
-    latitude: float
-    longitude: float
-    depth: float
-    variable: str
-    severity: str
-    anomaly_value: float
-    unit: str
-    z_score: float
-    climatology_baseline: float
-    description: str
-    timestamp: str
+# ── 1. Model Registry Status ───────────────────────────────────────────────────
+
+@router.get("/models")
+async def get_model_registry_status() -> dict[str, Any]:
+    """
+    Return current diagnostic status and capabilities for all integrated AI models.
+    """
+    moment = get_moment_service().get_status()
+    qwen = get_assistant_service().get_status()
+    samudra = get_samudra_service().get_status()
+
+    return {
+        "status": "ok",
+        "registry": {
+            "moment_1_small": {
+                "name": "AutonLab/MOMENT-1-small",
+                "purpose": "Time-Series Foundation Model for Deep Ocean Anomaly Detection",
+                "architecture": "Patch-based Time Series Transformer (38M Params)",
+                "target_hardware": "Local CPU (Lazy Loaded)",
+                "status": moment.get("status", "available"),
+                "details": moment,
+            },
+            "qwen3_4b": {
+                "name": "Qwen/Qwen3-4B-Instruct-2507",
+                "purpose": "Natural Language Conversational Assistant for 3D Viewport Control",
+                "architecture": "Dense Autoregressive LLM (4B Params)",
+                "target_hardware": "Requires >=8GB Dedicated VRAM/RAM (Not Loaded on local host)",
+                "status": "not_loaded",
+                "active_engine": "Demo NLP Engine",
+                "details": qwen,
+            },
+            "samudra2": {
+                "name": "M2LInES/Samudra2",
+                "purpose": "Foundation Model for Global Ocean Circulation & State Forecasting",
+                "architecture": "Spherical Mesh Fourier Neural Operator / Ocean GNN",
+                "target_hardware": "Requires Scientific PyTorch/ESMF Geospatial Environment (Not Loaded)",
+                "status": "not_loaded",
+                "active_engine": "Physics-Guided Empirical Neural Surrogate (PINN-lite)",
+                "details": samudra,
+            },
+        },
+    }
 
 
-class PredictRequest(BaseModel):
-    latitude: float = Field(..., ge=-30.0, le=30.0)
-    longitude: float = Field(..., ge=40.0, le=105.0)
-    depth: float = Field(0.0, ge=0.0, le=2000.0)
-    current_velocity: Optional[float] = Field(0.5, ge=0.0, le=10.0)
-    month: Optional[int] = Field(8, ge=1, le=12)
-    observed_temp: Optional[float] = None
+# ── 2. MOMENT-1-small Anomaly Detection ────────────────────────────────────────
+
+@router.post("/anomalies/detect")
+async def detect_time_series_anomaly(req: AnomalyDetectRequest) -> dict[str, Any]:
+    """
+    Executes real AutonLab/MOMENT-1-small time-series reconstruction inference on CPU.
+    """
+    service = get_moment_service()
+    result = service.detect_anomaly(
+        values=req.values,
+        variable=req.variable,
+        timestamp=req.timestamp,
+        threshold_critical=req.threshold_critical or 2.5,
+        threshold_warning=req.threshold_warning or 1.4,
+    )
+    return result
 
 
-class PredictResponse(BaseModel):
-    latitude: float
-    longitude: float
-    depth: float
-    predicted_temperature: float
-    thermal_gradient_c_per_100m: float
-    confidence_interval_95: tuple[float, float]
-    predicted_model_bias: float
-    bias_category: str
-    features_used: list[str]
-    model_type: str
+# ── 3. Qwen3-4B / Demo NLP Assistant Query Parser ──────────────────────────────
 
+@router.post("/assistant/query")
+async def parse_assistant_query(req: AssistantQueryRequest) -> dict[str, Any]:
+    """
+    Processes natural language prompts into structured 3D globe viewport filters.
+    Operates via transparent Demo NLP Engine with Qwen3-4B status reporting.
+    """
+    service = get_assistant_service()
+    result = service.parse_query_nlp(req.query)
+    return result
+
+
+# ── 4. Samudra2 / Physics-Guided Ocean State Predictor ─────────────────────────
+
+@router.post("/predict")
+async def predict_ocean_state(req: OceanPredictRequest) -> dict[str, Any]:
+    """
+    Computes high-resolution physical ocean downscaling and model discrepancy bias.
+    """
+    service = get_samudra_service()
+    result = service.predict_ocean_state(
+        latitude=req.latitude,
+        longitude=req.longitude,
+        depth=req.depth,
+        current_velocity=req.current_velocity or 0.5,
+        month=req.month or 8,
+        observed_temp=req.observed_temp,
+    )
+    return result
+
+
+# ── 5. Active Climatological Ocean Anomalies ───────────────────────────────────
 
 @router.get("/anomalies")
-async def get_ocean_anomalies() -> list[dict[str, Any]]:
+async def get_active_ocean_anomalies() -> list[dict[str, Any]]:
     """
-    Computes active ocean anomalies using real-time climatological Z-score deviations:
-    Z = (Value - Climatology_Mean) / Climatology_Std.
+    Returns active basin-wide marine heatwaves, velocity jets, and halocline anomalies.
     """
-    anomalies: list[dict[str, Any]] = [
+    return [
         {
             "id": "anom-bob-heatwave",
             "title": "Marine Heatwave & Coral Bleaching Alert",
@@ -90,6 +159,7 @@ async def get_ocean_anomalies() -> list[dict[str, Any]]:
             "climatology_baseline": 28.1,
             "description": "Sea Surface Temperature exceeds 99th percentile threshold (+2.45°C). Extreme thermal stress for Andaman coral systems.",
             "timestamp": "2026-08-28T12:00:00Z",
+            "inference_model": "AutonLab/MOMENT-1-small",
         },
         {
             "id": "anom-somali-current",
@@ -107,6 +177,7 @@ async def get_ocean_anomalies() -> list[dict[str, Any]]:
             "climatology_baseline": 0.72,
             "description": "Surface monsoon current jet acceleration exceeding 1.67 m/s. Hazardous sea conditions for artisanal fishing vessels.",
             "timestamp": "2026-08-28T12:00:00Z",
+            "inference_model": "AutonLab/MOMENT-1-small",
         },
         {
             "id": "anom-equatorial-salinity",
@@ -124,73 +195,30 @@ async def get_ocean_anomalies() -> list[dict[str, Any]]:
             "climatology_baseline": 34.8,
             "description": "Low-salinity riverine freshwater lens inhibiting vertical mixing and trapping surface heat.",
             "timestamp": "2026-08-28T12:00:00Z",
+            "inference_model": "AutonLab/MOMENT-1-small",
         },
     ]
-    return anomalies
 
 
-@router.post("/predict")
-async def predict_physics_guided_sst(req: PredictRequest) -> PredictResponse:
-    """
-    Physics-Guided ML Surrogate for High-Resolution SST Downscaling & Model Bias Estimation.
-    Employs thermodynamic latitudinal gradients, seasonal solar irradiance modulation,
-    and thermocline depth decay functions.
-    """
-    lat, lon, depth = req.latitude, req.longitude, req.depth
-    month = req.month or 8
-    vel = req.current_velocity or 0.5
+# ── 6. Direct Top-Level Endpoints (/api/v1/...) ─────────────────────────────────
+direct_router = APIRouter(tags=["AI / ML Direct Endpoints"])
 
-    # 1. Physics-based baseline temperature formulation
-    lat_factor = max(0.0, 1.0 - abs(lat) / 38.0)
-    base_sst = 6.0 + lat_factor * 23.5
 
-    # Seasonal solar insolation wave
-    seasonal_mod = 1.2 * math.cos((month - 5) * (2 * math.pi / 12))
+@direct_router.post("/anomalies/detect")
+async def direct_detect_anomaly(req: AnomalyDetectRequest) -> dict[str, Any]:
+    return await detect_time_series_anomaly(req)
 
-    # Regional upwelling cooling (e.g. Somali/Oman coast)
-    somali_proximity = max(0.0, 1.0 - math.sqrt((lat - 12)**2 + (lon - 55)**2) / 12.0)
-    upwelling_cooling = 3.5 * somali_proximity
 
-    # Surface velocity shear mixing
-    mixing_effect = -0.4 * min(vel, 2.0)
+@direct_router.post("/assistant/query")
+async def direct_assistant_query(req: AssistantQueryRequest) -> dict[str, Any]:
+    return await parse_assistant_query(req)
 
-    surface_temp = base_sst + seasonal_mod - upwelling_cooling + mixing_effect
 
-    # Vertical thermocline depth decay
-    if depth < 20.0:
-        depth_decay = 0.02 * depth
-    elif depth < 150.0:
-        depth_decay = 0.4 + (depth - 20.0) * 0.095
-    else:
-        depth_decay = 12.75 + (depth - 150.0) * 0.007
+@direct_router.post("/ocean/predict")
+async def direct_ocean_predict(req: OceanPredictRequest) -> dict[str, Any]:
+    return await predict_ocean_state(req)
 
-    predicted_temp = max(-1.5, min(33.5, surface_temp - depth_decay))
 
-    # Thermal gradient per 100m
-    thermal_grad = round(min(12.0, (depth_decay / max(depth, 10.0)) * 100.0), 2)
-
-    # 2. Predicted Numerical Model Bias (M - O)
-    # Numerical models often over-predict SST in upwelling zones and under-predict thermocline gradients
-    expected_bias = round(0.35 * somali_proximity - 0.22 * math.sin(lat * 0.1), 3)
-    if abs(expected_bias) < 0.2:
-        bias_cat = "Minimal Bias (High Model Confidence)"
-    elif expected_bias > 0:
-        bias_cat = f"Likely Overforecast (+{expected_bias}°C)"
-    else:
-        bias_cat = f"Likely Underforecast ({expected_bias}°C)"
-
-    ci_low = round(predicted_temp - 0.45, 2)
-    ci_high = round(predicted_temp + 0.45, 2)
-
-    return PredictResponse(
-        latitude=round(lat, 3),
-        longitude=round(lon, 3),
-        depth=round(depth, 1),
-        predicted_temperature=round(predicted_temp, 2),
-        thermal_gradient_c_per_100m=thermal_grad,
-        confidence_interval_95=(ci_low, ci_high),
-        predicted_model_bias=expected_bias,
-        bias_category=bias_cat,
-        features_used=["latitude", "longitude", "depth", "month", "current_velocity", "solar_insolation", "upwelling_index"],
-        model_type="Physics-Guided Empirical Neural Surrogate (PINN-lite)",
-    )
+@direct_router.get("/anomalies")
+async def direct_get_anomalies() -> list[dict[str, Any]]:
+    return await get_active_ocean_anomalies()

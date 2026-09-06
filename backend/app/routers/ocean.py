@@ -50,6 +50,11 @@ VALID_VARIABLES = {
     "current_w",
     "current_velocity",
     "velocity",
+    "sea_level",
+    "sea_surface_height",
+    "ssh",
+    "oxygen",
+    "phytoplankton",
 }
 
 

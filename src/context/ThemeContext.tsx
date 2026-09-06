@@ -11,6 +11,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 
 export type ThemeMode = 'dark' | 'light' | 'tactical' | 'coral' | 'arctic' | 'bioluminescence'
+export type OceanTheme = ThemeMode
 
 export interface ThemeMeta {
   id: ThemeMode
@@ -23,7 +24,7 @@ export interface ThemeMeta {
 
 export const THEME_META: ThemeMeta[] = [
   { id: 'dark', label: 'Deep Ocean', icon: '🌙', description: 'Scientific dark mode', accent: '#00caf0', bg: '#0a1324' },
-  { id: 'light', label: 'Maritime Light', icon: '☀️', description: 'Crisp daylight mode', accent: '#0369a1', bg: '#f1f5f9' },
+  { id: 'light', label: 'Maritime Light', icon: '☀️', description: 'Crisp daylight mode', accent: '#0284c7', bg: '#ffffff' },
   { id: 'tactical', label: 'Tactical', icon: '🛰️', description: 'High-contrast command', accent: '#f59e0b', bg: '#09090b' },
   { id: 'coral', label: 'Coral Reef', icon: '🪸', description: 'Warm scientific palette', accent: '#f97316', bg: '#1a0a00' },
   { id: 'arctic', label: 'Arctic Ice', icon: '❄️', description: 'Ice-blue high contrast', accent: '#7dd3fc', bg: '#0c1a2e' },

@@ -11,7 +11,7 @@ export const API_CONFIG = {
   /** Base URL for the FastAPI backend (to be set in .env) */
   baseUrl: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000',
   version: 'v1',
-  timeout: 30_000, // ms
+  timeout: 2500, // ms — fast fallback if backend is unreachable
 } as const
 
 export const API_ENDPOINTS = {
@@ -160,7 +160,7 @@ export const APP_CONFIG = {
   shortName: 'OceanIQ',
   description: 'Interactive 3D visualization of numerical ocean model outputs and in-situ observations',
   version: '0.1.0',
-  buildId: 'SIH-26067',
+  buildId: 'INCOIS-OIQ',
 } as const
 
 export const PRIMARY_NAV_ITEMS = [

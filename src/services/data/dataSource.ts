@@ -33,11 +33,22 @@ import {
   DEFAULT_DATASET,
 } from './apiOceanData'
 
-// ─── Mode detection ───────────────────────────────────────────────────────────
+// ─── Mode detection & Circuit Breaker ────────────────────────────────────────
 
 const DATA_SOURCE = (import.meta.env.VITE_DATA_SOURCE ?? 'mock') as 'mock' | 'api'
 
 export const isApiMode = DATA_SOURCE === 'api'
+
+let backendOfflineUntil = 0
+const OFFLINE_COOLDOWN_MS = 15_000 // If backend fails, use mock for 15s before re-checking
+
+function isBackendConsideredOffline(): boolean {
+  return Date.now() < backendOfflineUntil
+}
+
+function markBackendOffline(): void {
+  backendOfflineUntil = Date.now() + OFFLINE_COOLDOWN_MS
+}
 
 // ─── Fallback helper ──────────────────────────────────────────────────────────
 
@@ -46,11 +57,12 @@ async function withFallback<T>(
   apiFn: () => Promise<T>,
   mockFn: () => T,
 ): Promise<T> {
-  if (!isApiMode) return mockFn()
+  if (!isApiMode || isBackendConsideredOffline()) return mockFn()
   try {
     return await apiFn()
   } catch (err) {
-    console.warn(`[OceanIQ] API call '${label}' failed, using mock fallback:`, err)
+    markBackendOffline()
+    // Suppress console warning spam once backend is marked offline
     return mockFn()
   }
 }
@@ -113,11 +125,11 @@ export async function getDataSourceOceanField(
   timeIso: string,
   datasetId = DEFAULT_DATASET,
 ): Promise<ApiOceanFieldResponse | null> {
-  if (!isApiMode) return null
+  if (!isApiMode || isBackendConsideredOffline()) return null
   try {
     return await apiGetOceanField(variable, depth, timeIso, datasetId)
-  } catch (err) {
-    console.warn('[OceanIQ] getOceanField failed, falling back to mock:', err)
+  } catch {
+    markBackendOffline()
     return null
   }
 }
@@ -157,12 +169,12 @@ export async function getDataSourceCurrentVectors(
   timeIso?: string,
   datasetId = DEFAULT_DATASET,
 ): Promise<CurrentVector[]> {
-  if (isApiMode && timeIso) {
+  if (isApiMode && timeIso && !isBackendConsideredOffline()) {
     try {
       const vectors = await apiGetCurrentVectors(depth, timeIso, datasetId)
       if (vectors.length > 0) return vectors
     } catch {
-      // fallback
+      markBackendOffline()
     }
   }
   return mockGetCurrentVectors(depth, timeIndex)

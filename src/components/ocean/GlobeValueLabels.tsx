@@ -24,7 +24,8 @@ import { getOceanValueSync } from '@/services/data/dataSource'
 interface GlobeValueLabelsProps {
   selectedVariable: OceanVariable
   selectedDepth: number
-  selectedTimeIso: string
+  selectedTimeIso?: string
+  selectedTimeIndex?: number
   visible?: boolean
 }
 
@@ -53,28 +54,28 @@ function latLonToVec3(lat: number, lon: number, altitude = 0.03): THREE.Vector3 
   return new THREE.Vector3().setFromSphericalCoords(r, phi, theta)
 }
 
-function getUnitForVariable(variable: OceanVariable): string {
-  switch (variable) {
+function getUnitForVariable(v: OceanVariable): string {
+  switch (v) {
     case 'temperature': return '°C'
     case 'salinity': return 'PSU'
-    case 'current_velocity':
-    case 'current_u':
-    case 'current_v': return 'm/s'
+    case 'current_velocity': return 'm/s'
     case 'sea_level':
     case 'sea_surface_height': return 'cm'
-    case 'chlorophyll':
-    case 'phytoplankton': return 'mg/m³'
+    case 'chlorophyll': return 'mg/m³'
+    case 'oxygen': return 'µmol/kg'
     default: return ''
   }
 }
 
-function getColorForVariable(variable: OceanVariable): string {
-  switch (variable) {
-    case 'temperature': return '#f97316'
-    case 'salinity': return '#38bdf8'
-    case 'current_velocity': return '#818cf8'
-    case 'sea_level': return '#06b6d4'
-    case 'chlorophyll': return '#10b981'
+function getColorForVariable(v: OceanVariable): string {
+  switch (v) {
+    case 'temperature': return '#fb923c' // Orange
+    case 'salinity': return '#38bdf8'    // Cyan / Sky
+    case 'current_velocity': return '#818cf8' // Indigo
+    case 'sea_level':
+    case 'sea_surface_height': return '#06b6d4' // Marine Cyan
+    case 'chlorophyll': return '#10b981' // Emerald
+    case 'oxygen': return '#38bdf8'
     default: return '#a855f7'
   }
 }
@@ -82,7 +83,7 @@ function getColorForVariable(variable: OceanVariable): string {
 export function GlobeValueLabels({
   selectedVariable,
   selectedDepth,
-  selectedTimeIso,
+  selectedTimeIndex = 0,
   visible = true,
 }: GlobeValueLabelsProps) {
   const unit = getUnitForVariable(selectedVariable)
@@ -91,20 +92,32 @@ export function GlobeValueLabels({
   const stationsWithValues = useMemo(() => {
     return OCEAN_STATIONS.map((station) => {
       const val = getOceanValueSync(
-        selectedVariable,
         station.lat,
         station.lon,
         selectedDepth,
-        selectedTimeIso
+        selectedVariable,
+        selectedTimeIndex
       )
       const pos = latLonToVec3(station.lat, station.lon, 0.032)
+
+      let formattedValue = '--'
+      if (typeof val === 'number') {
+        if (selectedVariable === 'sea_level' || selectedVariable === 'sea_surface_height') {
+          formattedValue = val > 0 ? `+${val.toFixed(1)}` : val.toFixed(1)
+        } else if (selectedVariable === 'current_velocity' || selectedVariable === 'chlorophyll') {
+          formattedValue = val.toFixed(2)
+        } else {
+          formattedValue = val.toFixed(1)
+        }
+      }
+
       return {
         ...station,
-        value: typeof val === 'number' ? val.toFixed(2) : '--',
+        value: formattedValue,
         pos,
       }
     })
-  }, [selectedVariable, selectedDepth, selectedTimeIso])
+  }, [selectedVariable, selectedDepth, selectedTimeIndex])
 
   if (!visible) return null
 
@@ -134,9 +147,9 @@ export function GlobeValueLabels({
           </mesh>
 
           {/* Floating Numerical HUD Badge */}
-          <Html distanceFactor={4.2} center zIndexRange={[12, 0]}>
+          <Html distanceFactor={4.2} center zIndexRange={[1, 0]} occlude style={{ pointerEvents: 'none', userSelect: 'none' }}>
             <div
-              className="pointer-events-none select-none flex flex-col items-center px-2 py-1 rounded-lg bg-black/85 backdrop-blur-md border shadow-xl transition-all duration-300 transform -translate-y-6"
+              className="pointer-events-none select-none flex flex-col items-center px-2 py-1 rounded-lg bg-black/90 backdrop-blur-md border shadow-xl transition-all duration-300 transform -translate-y-6"
               style={{ borderColor: `${accentColor}80`, boxShadow: `0 0 12px ${accentColor}33` }}
             >
               <div className="flex items-center gap-1 font-mono leading-none">

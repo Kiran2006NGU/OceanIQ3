@@ -61,7 +61,7 @@ function getObsValue(obs: MockObservation, param: XAxisParam | YAxisParam): numb
     case 'temperature': return obs.temperature ?? 0
     case 'salinity': return obs.salinity ?? 0
     case 'chlorophyll': return obs.chlorophyll ?? 0
-    case 'current_velocity': return (obs as Record<string, unknown>)['currentSpeed'] as number ?? 0
+    case 'current_velocity': return ((obs as unknown as Record<string, unknown>)['currentSpeed'] as number) ?? 0
     default: return 0
   }
 }

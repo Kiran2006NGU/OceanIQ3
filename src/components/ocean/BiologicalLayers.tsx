@@ -220,8 +220,8 @@ export function BiologicalLayers({ visibleLayers }: BiologicalLayersProps) {
               </mesh>
 
               {/* PFZ Label HUD */}
-              <Html distanceFactor={4.5} center zIndexRange={[12, 0]}>
-                <div className="pointer-events-none select-none px-2 py-1 rounded bg-black/80 backdrop-blur-sm border border-amber-400/40 text-[9px] font-mono text-amber-300 whitespace-nowrap shadow-lg flex items-center gap-1.5 animate-fade-in">
+              <Html distanceFactor={4.5} center zIndexRange={[1, 0]} occlude style={{ pointerEvents: 'none', userSelect: 'none' }}>
+                <div className="pointer-events-none select-none px-2 py-1 rounded bg-black/90 backdrop-blur-sm border border-amber-400/40 text-[9px] font-mono text-amber-300 whitespace-nowrap shadow-lg flex items-center gap-1.5 animate-fade-in">
                   <span className="text-amber-400">🐟</span>
                   <div>
                     <span className="font-bold">{school.name}</span>

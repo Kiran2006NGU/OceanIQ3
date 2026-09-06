@@ -52,7 +52,7 @@ export function UserManualPage() {
               <h1 className="text-lg font-bold text-white font-mono flex items-center gap-2">
                 OceanIQ User Manual & Official INCOIS Guide
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
-                  SIH 26067
+                  INCOIS Platform
                 </span>
               </h1>
               <p className="text-xs text-slate-400 font-mono mt-0.5">
@@ -143,6 +143,29 @@ export function UserManualPage() {
                 dynamic streamlines, and AI threat detection. Below is the bit-by-bit operational guide
                 to using every button, layer, tool, and inspector across the platform.
               </p>
+            </div>
+
+            {/* Getting Started: Login & Access */}
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-cyan-950/60 border border-emerald-500/30 space-y-3">
+              <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs uppercase tracking-widest font-bold">
+                <CheckCircle2 size={15} />
+                <span>Getting Started · Platform Access</span>
+              </div>
+              <h3 className="text-base font-bold text-white font-sans">Step 0 — Login &amp; User Profile</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                  <p className="text-xs font-bold text-emerald-300 font-mono">1. Access the Login Page</p>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">Navigate to the platform URL. If not logged in, you will be automatically redirected to the OceanIQ Access Portal.</p>
+                </div>
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                  <p className="text-xs font-bold text-emerald-300 font-mono">2. Fill Your Profile</p>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">Enter your <strong className="text-white">Full Name</strong>, <strong className="text-white">Email Address</strong>, and select your <strong className="text-white">Designation / Role</strong> (e.g., Research Scientist, Disaster Management Officer).</p>
+                </div>
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                  <p className="text-xs font-bold text-emerald-300 font-mono">3. Session Persistence</p>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">Your profile is saved in the browser. You stay logged in across sessions until you click <strong className="text-white">Logout</strong> in the top navigation bar.</p>
+                </div>
+              </div>
             </div>
 
             {/* Step-by-Step Sections Grid */}

@@ -143,9 +143,9 @@ export function AboutPage() {
         {/* ── Disclaimer ───────────────────────────────────────── */}
         <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-slate-400 leading-relaxed">
           <strong className="text-amber-400">⚠ Disclaimer: </strong>
-          This platform is an academic prototype for Smart India Hackathon 2026 (PS ID: SIH-26067).
-          It is <em>not</em> officially affiliated with INCOIS, MoES, ISRO, or any government agency.
-          All data shown is simulated for demonstration purposes.
+          This platform is a scientific research prototype developed for INCOIS (Indian National Centre for Ocean Information Services) under MoES.
+          It is <em>not</em> an official government portal.
+          All data shown is simulated for research and demonstration purposes.
         </div>
 
         {/* ── Two-column grid ──────────────────────────────────── */}
@@ -155,7 +155,7 @@ export function AboutPage() {
           <div className="lg:col-span-2 space-y-6">
 
             {/* Problem Statement */}
-            <Section title="Problem Statement — SIH-26067" icon={<BookOpen size={16} />}>
+            <Section title="Platform Objective" icon={<BookOpen size={16} />}>
               <p className="text-sm text-slate-400 leading-relaxed mb-3">
                 Develop a web-based interactive 3D visualization platform that integrates numerical ocean
                 model outputs and in-situ observations for INCOIS (Indian National Centre for Ocean
@@ -294,7 +294,7 @@ export function AboutPage() {
                   { label: 'INCOIS Official Website', href: 'https://incois.gov.in', color: 'text-cyan-400' },
                   { label: 'Argo Float Program', href: 'https://argo.ucsd.edu', color: 'text-cyan-400' },
                   { label: 'CF Conventions', href: 'https://cfconventions.org', color: 'text-cyan-400' },
-                  { label: 'SIH 2026 Portal', href: 'https://sih.gov.in', color: 'text-cyan-400' },
+                  { label: 'INCOIS SAMUDRA Portal', href: 'https://samudra.incois.gov.in', color: 'text-cyan-400' },
                 ].map((link) => (
                   <a
                     key={link.label}
@@ -316,7 +316,7 @@ export function AboutPage() {
         {/* Footer */}
         <div className="text-center py-4 border-t border-white/8">
           <p className="text-[11px] text-slate-600 font-mono">
-            SIH 26067 · {APP_CONFIG.name} · v{APP_CONFIG.version} · Academic Prototype
+            OceanIQ · {APP_CONFIG.name} · v{APP_CONFIG.version} · Scientific Prototype
           </p>
         </div>
 
