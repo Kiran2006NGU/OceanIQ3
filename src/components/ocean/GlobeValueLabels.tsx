@@ -17,7 +17,7 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
 import { Html } from '@react-three/drei'
-import { GLOBE_RADIUS } from '@/utils/geoUtils'
+import { GLOBE_RADIUS, latLonToVec3 } from '@/utils/geoUtils'
 import type { OceanVariable } from '@/types/ocean'
 import { getOceanValueSync } from '@/services/data/dataSource'
 
@@ -45,13 +45,9 @@ const OCEAN_STATIONS: StationTarget[] = [
   { id: 'st-and', name: 'Andaman Archipelagic Station', lat: 11.8, lon: 93.2 },
 ]
 
-function latLonToVec3(lat: number, lon: number, altitude = 0.03): THREE.Vector3 {
-  const latRad = (lat * Math.PI) / 180
-  const lonRad = ((lon + 90) * Math.PI) / 180
-  const phi = Math.PI / 2 - latRad
-  const theta = lonRad
-  const r = GLOBE_RADIUS + altitude
-  return new THREE.Vector3().setFromSphericalCoords(r, phi, theta)
+function getStationPos(lat: number, lon: number, altitude = 0.03): THREE.Vector3 {
+  const [x, y, z] = latLonToVec3(lat, lon, GLOBE_RADIUS + altitude)
+  return new THREE.Vector3(x, y, z)
 }
 
 function getUnitForVariable(v: OceanVariable): string {
@@ -98,7 +94,7 @@ export function GlobeValueLabels({
         selectedVariable,
         selectedTimeIndex
       )
-      const pos = latLonToVec3(station.lat, station.lon, 0.032)
+      const pos = getStationPos(station.lat, station.lon, 0.032)
 
       let formattedValue = '--'
       if (typeof val === 'number') {

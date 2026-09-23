@@ -88,67 +88,91 @@ export function isLandCoordinate(lat: number, lon: number): boolean {
   const nlon = ((((lon + 180) % 360) + 360) % 360) - 180
 
   // 1. Antarctica
-  if (lat < -65) return true
+  if (lat < -62) return true
 
-  // 2. Indian Subcontinent (approximate triangular polygon)
-  if (lat >= 8.0 && lat <= 35.0 && nlon >= 68.0 && nlon <= 90.0) {
-    // Arabian Sea cut
-    if (lat < 23 && nlon < 72.5) return false
-    // Bay of Bengal cut
-    if (lat < 21 && nlon > 85.0 && lat < 18) return false
+  // 2. Sri Lanka
+  if (lat >= 5.8 && lat <= 9.9 && nlon >= 79.5 && nlon <= 81.9) {
     return true
   }
 
-  // 3. Arabian Peninsula & Middle East
+  // 3. Indian Subcontinent Mainland (Precise coastal boundaries)
+  if (lat >= 8.1 && lat <= 37.0 && nlon >= 68.0 && nlon <= 97.5) {
+    if (lat >= 8.1 && lat <= 20.5) {
+      // West coast longitude (Arabian Sea shoreline)
+      const westCoastLon = 77.5 - ((lat - 8.1) / (20.5 - 8.1)) * (77.5 - 72.8)
+      if (nlon < westCoastLon) return false // Arabian Sea
+
+      // East coast longitude (Bay of Bengal shoreline)
+      const eastCoastLon = lat < 13.0
+        ? 77.6 + ((lat - 8.1) / (13.0 - 8.1)) * (80.3 - 77.6)
+        : 80.3 + ((lat - 13.0) / (20.5 - 13.0)) * (86.8 - 80.3)
+      if (nlon > eastCoastLon) return false // Bay of Bengal
+
+      return true
+    }
+
+    // Northern subcontinent & Gujarat
+    if (lat > 20.5 && lat <= 37.0) {
+      if (lat <= 24.5 && nlon < 68.5) return false // Arabian Sea off Gujarat
+      if (lat <= 22.0 && nlon > 89.0) return false // Bay of Bengal / Ganges delta mouth
+      return true
+    }
+  }
+
+  // 4. Arabian Peninsula & Middle East
   if (lat >= 12.0 && lat <= 33.0 && nlon >= 35.0 && nlon <= 60.0) {
     // Red Sea cut
-    if (nlon >= 37 && nlon <= 43 && lat <= 27 && lat >= 13) return false
+    if (nlon >= 36 && nlon <= 43.5 && lat <= 28 && lat >= 12.5) return false
     // Persian Gulf cut
-    if (nlon >= 49 && nlon <= 56 && lat <= 30 && lat >= 24) return false
+    if (nlon >= 48 && nlon <= 56.5 && lat <= 30.5 && lat >= 24) return false
     return true
   }
 
-  // 4. Africa
-  if (lat >= -35.0 && lat <= 37.0 && nlon >= -18.0 && nlon <= 51.0) {
-    // Exclude ocean cuts
+  // 5. Africa
+  if (lat >= -35.0 && lat <= 37.0 && nlon >= -18.0 && nlon <= 51.5) {
+    // Somali Horn and Indian Ocean water boundaries
+    if (nlon > 51.5) return false
     if (nlon > 43 && lat > 12) return false
     return true
   }
 
-  // 5. Eurasia (Europe & Northern Asia)
+  // 6. Eurasia (Europe & Northern Asia)
   if (lat >= 35.0 && lat <= 78.0 && nlon >= -10.0 && nlon <= 175.0) {
     return true
   }
 
-  // 6. Southeast Asia & China
-  if (lat >= 10.0 && lat <= 45.0 && nlon >= 98.0 && nlon <= 125.0) {
+  // 7. Southeast Asia, Indochina, Myanmar, Thailand & Malay Peninsula
+  if (lat >= 1.0 && lat <= 45.0 && nlon >= 98.0 && nlon <= 125.0) {
+    if (lat <= 6.0 && nlon < 100.0) return false // Andaman / Malacca strait
     return true
   }
 
-  // 7. North America
-  if (lat >= 15.0 && lat <= 75.0 && nlon >= -168.0 && nlon <= -50.0) {
-    // Gulf of Mexico cut
-    if (lat >= 18 && lat <= 30 && nlon >= -98 && nlon <= -82) return false
-    return true
-  }
-
-  // 8. South America
-  if (lat >= -56.0 && lat <= 12.0 && nlon >= -82.0 && nlon <= -34.0) {
-    return true
+  // 8. Indonesian Archipelago (Sumatra, Java, Borneo)
+  if (lat >= -11.0 && lat <= 6.0 && nlon >= 95.0 && nlon <= 120.0) {
+    // Sumatra
+    if (nlon >= 95.0 && nlon <= 106.0 && lat >= -6.0 && lat <= 5.8) {
+      // Main ridge line of Sumatra
+      const sumatraLon = 96.0 + ((lat + 6.0) / 11.8) * 8.0
+      if (Math.abs(nlon - sumatraLon) < 2.5) return true
+    }
+    // Java
+    if (lat >= -8.8 && lat <= -5.8 && nlon >= 105.0 && nlon <= 114.5) return true
+    // Deep Indian ocean waters south/west of Java/Sumatra
+    return false
   }
 
   // 9. Australia
-  if (lat >= -44.0 && lat <= -10.0 && nlon >= 113.0 && nlon <= 154.0) {
+  if (lat >= -44.0 && lat <= -10.5 && nlon >= 113.0 && nlon <= 154.0) {
     return true
   }
 
-  // 10. Greenland
-  if (lat >= 60.0 && lat <= 84.0 && nlon >= -73.0 && nlon <= -12.0) {
+  // 10. Madagascar
+  if (lat >= -26.0 && lat <= -11.8 && nlon >= 43.0 && nlon <= 50.8) {
     return true
   }
 
-  // 11. Madagascar
-  if (lat >= -26.0 && lat <= -12.0 && nlon >= 43.0 && nlon <= 51.0) {
+  // 11. Americas
+  if (lat >= -56.0 && lat <= 75.0 && nlon >= -168.0 && nlon <= -34.0) {
     return true
   }
 

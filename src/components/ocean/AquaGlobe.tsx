@@ -27,13 +27,16 @@ interface GeoLabel {
 }
 
 const GEO_LABELS: GeoLabel[] = [
-  { name: 'India', lat: 21.5, lon: 78.5, type: 'country' },
-  { name: 'Bangladesh', lat: 24.2, lon: 89.8, type: 'country' },
-  { name: 'Sri Lanka', lat: 7.8, lon: 80.7, type: 'country' },
-  { name: 'Bay of Bengal', lat: 14.5, lon: 87.5, type: 'ocean' },
+  { name: 'INDIA', lat: 21.5, lon: 78.5, type: 'country' },
   { name: 'Arabian Sea', lat: 15.2, lon: 64.8, type: 'ocean' },
-  { name: 'Andaman Sea', lat: 10.5, lon: 94.2, type: 'ocean' },
-  { name: 'Myanmar', lat: 19.5, lon: 96.0, type: 'country' },
+  { name: 'Bay of Bengal', lat: 15.0, lon: 88.0, type: 'ocean' },
+  { name: 'Indian Ocean', lat: -6.0, lon: 78.0, type: 'ocean' },
+  { name: 'AFRICA', lat: -2.0, lon: 28.0, type: 'country' },
+  { name: 'AUSTRALIA', lat: -23.5, lon: 133.5, type: 'country' },
+  { name: 'Southern Ocean', lat: -48.0, lon: 78.0, type: 'ocean' },
+  { name: 'Sri Lanka', lat: 7.8, lon: 80.7, type: 'country' },
+  { name: 'Andaman Sea', lat: 11.2, lon: 94.2, type: 'ocean' },
+  { name: 'Lakshadweep', lat: 10.6, lon: 72.6, type: 'region' },
   { name: 'Sumatra', lat: 0.5, lon: 101.5, type: 'region' },
 ]
 
@@ -90,14 +93,52 @@ export function AquaGlobe({
     }
   }, [isXRayMode])
 
-  // ── 3. Dynamic Ocean Physics Canvas Texture (Strict Coastlines) ─────────────
+  // ── 3. Atmospheric Fresnel Rayleigh Halo Shader ──────────────────────────
+  const atmosphereShaderMaterial = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      vertexShader: `
+        varying vec3 vNormal;
+        varying vec3 vViewPosition;
+        void main() {
+          vNormal = normalize(normalMatrix * normal);
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          vViewPosition = -mvPosition.xyz;
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 glowColor;
+        uniform float power;
+        uniform float coefficient;
+        varying vec3 vNormal;
+        varying vec3 vViewPosition;
+        void main() {
+          vec3 viewDir = normalize(vViewPosition);
+          float intensity = pow(1.0 - max(0.0, dot(vNormal, viewDir)), power) * coefficient;
+          gl_FragColor = vec4(glowColor, intensity);
+        }
+      `,
+      uniforms: {
+        glowColor: { value: new THREE.Color('#00f0ff') },
+        power: { value: 2.6 },
+        coefficient: { value: 1.35 },
+      },
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      side: THREE.BackSide,
+      depthWrite: false,
+    })
+  }, [])
+
+  // ── 4. Dynamic Ocean Physics Canvas Texture (Optimized 360x180) ───────────
   const { texture } = useMemo(() => {
     const cvs = document.createElement('canvas')
-    cvs.width = 512
-    cvs.height = 256
+    cvs.width = 360
+    cvs.height = 180
     const ctx = cvs.getContext('2d', { willReadFrequently: true })
     if (ctx) {
       ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
     }
 
     const tex = new THREE.CanvasTexture(cvs)
@@ -106,6 +147,7 @@ export function AquaGlobe({
     tex.wrapS = THREE.ClampToEdgeWrapping
     tex.wrapT = THREE.ClampToEdgeWrapping
     tex.generateMipmaps = false
+    tex.colorSpace = THREE.SRGBColorSpace
 
     canvasRef.current = cvs
     textureRef.current = tex
@@ -113,7 +155,7 @@ export function AquaGlobe({
     return { texture: tex }
   }, [])
 
-  // ── 4. Render Vibrant Ocean Physics Heatmap ────────────────────────────────
+  // ── 5. Render Vibrant Ocean Physics Heatmap ────────────────────────────────
   useEffect(() => {
     if (showSatelliteOnly) return
 
@@ -127,7 +169,6 @@ export function AquaGlobe({
       const ctx = canvasRef.current.getContext('2d')
       if (!ctx) return
 
-      ctx.imageSmoothingEnabled = false
       const w = canvasRef.current.width
       const h = canvasRef.current.height
 
@@ -150,7 +191,7 @@ export function AquaGlobe({
             continue
           }
 
-          // Sample Model Data or Realistic Oceanographic Simulation
+          // Sample Model Data or Authentic Oceanographic Thermal Simulation
           let val = 27.5
           if (field && field.latitudes.length > 0) {
             const latIdx = Math.min(
@@ -177,40 +218,51 @@ export function AquaGlobe({
             )
             val = field.values[latIdx * field.nlon + lonIdx] ?? 27.5
           } else {
-            // High-fidelity analytical physics distribution for Indian Ocean Basin
+            // High-fidelity analytical physics distribution matching Reference Design 01
             if (selectedVariable === 'temperature') {
-              // Warm pool in Bay of Bengal & Arabian Sea (28.5-30.5°C), cool Somali/Oman upwelling (22.5°C)
-              const tropicalWarm = 29.5 * Math.exp(-Math.pow(lat - 10, 2) / 600)
-              const upwelling = -4.8 * Math.exp(-Math.pow(lat - 11, 2) / 35 - Math.pow(lon - 54, 2) / 45)
-              const depthDecay = Math.exp(-selectedDepth / 320.0)
-              val = 4.0 + (tropicalWarm + upwelling - 4.0) * depthDecay
+              // Southern Polar Ocean (< -30°): 0°C to 6°C deep blue
+              // Subtropical Indian Ocean (-30° to -10°): 14°C to 24°C cyan/emerald
+              // Tropical Indian Ocean Warm Pool (-10° to +25°): 28.5°C to 31.8°C fiery red/golden amber
+              // Somali/Oman upwelling wedge: 22°C to 24°C
+              if (lat < -35) {
+                val = Math.max(0.5, 4.0 + (lat + 35) * 0.15)
+              } else if (lat < -10) {
+                const subTrop = 14.0 + ((lat + 35) / 25.0) * 11.0
+                val = subTrop
+              } else {
+                const tropicalWarm = 29.8 * Math.exp(-Math.pow(lat - 8.0, 2) / 450)
+                const somaliUpwelling = -5.2 * Math.exp(-Math.pow(lat - 11.5, 2) / 30 - Math.pow(lon - 53.5, 2) / 40)
+                const bobWarm = 1.4 * Math.exp(-Math.pow(lat - 15.0, 2) / 70 - Math.pow(lon - 88.0, 2) / 60)
+                val = Math.max(18.0, tropicalWarm + somaliUpwelling + bobWarm)
+              }
+              const depthDecay = Math.exp(-selectedDepth / 300.0)
+              val = 3.5 + (val - 3.5) * depthDecay
             } else if (selectedVariable === 'salinity') {
-              // High Arabian Sea (36.5 PSU) vs Low Bay of Bengal (32.0 PSU) due to monsoon runoff
+              // High Arabian Sea (36.6 PSU) vs Low Bay of Bengal (31.8 PSU) due to monsoon runoff
               const arabsHigh = 36.6 * Math.exp(-Math.pow(lat - 16, 2) / 220 - Math.pow(lon - 64, 2) / 320)
-              const bobFresh = -3.6 * Math.exp(-Math.pow(lat - 18, 2) / 100 - Math.pow(lon - 89, 2) / 100)
+              const bobFresh = -3.8 * Math.exp(-Math.pow(lat - 18, 2) / 100 - Math.pow(lon - 89, 2) / 100)
               const baseSal = 34.8 + 0.6 * Math.cos(((lon - 70) * Math.PI) / 60.0)
               const depthDecay = Math.exp(-selectedDepth / 450.0)
               const surfaceSal = Math.max(31.0, Math.min(37.5, (arabsHigh || baseSal) + bobFresh))
               val = 34.6 + (surfaceSal - 34.6) * depthDecay
             } else if (selectedVariable === 'current_velocity') {
-              // High-speed Somali Jet (2.2 m/s), Equatorial Wyrtki Jet (1.6 m/s), EICC (1.2 m/s)
+              // High-speed Somali Jet (2.2 m/s), Equatorial Wyrtki Jet (1.8 m/s), EICC (1.2 m/s)
               const somaliJet = 2.2 * Math.exp(-Math.pow(lat - 9, 2) / 40 - Math.pow(lon - 53, 2) / 45)
-              const wyrtkiJet = 1.6 * Math.exp(-Math.pow(lat, 2) / 20 - Math.pow(lon - 80, 2) / 500)
+              const wyrtkiJet = 1.8 * Math.exp(-Math.pow(lat, 2) / 18 - Math.pow(lon - 75, 2) / 450)
               const eicc = 1.2 * Math.exp(-Math.pow(lat - 14, 2) / 35 - Math.pow(lon - 83, 2) / 25)
-              const baseSpeed = 0.2 + 0.15 * Math.sin(lat * 0.2 + lon * 0.1)
+              const baseSpeed = 0.25 + 0.15 * Math.sin(lat * 0.2 + lon * 0.1)
               const depthDecay = Math.exp(-selectedDepth / 220.0)
               val = Math.min(2.5, (somaliJet + wyrtkiJet + eicc + baseSpeed) * depthDecay)
             } else if (selectedVariable === 'chlorophyll') {
-              // High Euphotic Biomass Blooms (Northern BoB Delta, Sri Lanka Dome, Arabian Sea upwelling)
-              const deltaBloom = 3.8 * Math.exp(-Math.pow(lat - 19, 2) / 45 - Math.pow(lon - 89, 2) / 55)
-              const srilankaDome = 2.8 * Math.exp(-Math.pow(lat - 7.5, 2) / 25 - Math.pow(lon - 83, 2) / 30)
-              const somaliBloom = 3.2 * Math.exp(-Math.pow(lat - 12, 2) / 40 - Math.pow(lon - 54, 2) / 45)
-              const malabarBloom = 2.4 * Math.exp(-Math.pow(lat - 10, 2) / 30 - Math.pow(lon - 75.5, 2) / 20)
+              // High Euphotic Biomass Blooms (BoB Delta, Sri Lanka Dome, Arabian Sea upwelling)
+              const deltaBloom = 4.2 * Math.exp(-Math.pow(lat - 19.5, 2) / 40 - Math.pow(lon - 89, 2) / 50)
+              const srilankaDome = 3.1 * Math.exp(-Math.pow(lat - 7.5, 2) / 25 - Math.pow(lon - 83, 2) / 30)
+              const somaliBloom = 3.6 * Math.exp(-Math.pow(lat - 12, 2) / 40 - Math.pow(lon - 54, 2) / 45)
+              const malabarBloom = 2.6 * Math.exp(-Math.pow(lat - 10, 2) / 30 - Math.pow(lon - 75.5, 2) / 20)
               const baseChl = 0.18 + 0.08 * Math.sin(lat * 0.3)
               const depthDecay = Math.exp(-selectedDepth / 65.0)
               val = Math.min(5.0, (deltaBloom + srilankaDome + somaliBloom + malabarBloom + baseChl) * depthDecay)
             } else if (selectedVariable === 'sea_level' || selectedVariable === 'sea_surface_height') {
-              // Sea Surface Height Anomaly (cm): +25cm warm eddy cores, -20cm cold upwelling
               const eddy1 = 18.5 * Math.sin((lat * Math.PI) / 25) * Math.cos(((lon - 85) * Math.PI) / 30)
               const eddy2 = -15.0 * Math.exp(-Math.pow(lat - 11, 2) / 40 - Math.pow(lon - 55, 2) / 45)
               const eqBelt = 12.0 * Math.exp(-Math.pow(lat, 2) / 35)
@@ -230,6 +282,9 @@ export function AquaGlobe({
 
       ctx.putImageData(imgData, 0, 0)
       textureRef.current.needsUpdate = true
+      if (oceanMeshRef.current && oceanMeshRef.current.material) {
+        (oceanMeshRef.current.material as THREE.MeshStandardMaterial).needsUpdate = true
+      }
     }
 
     updateOceanCanvas()
@@ -245,7 +300,7 @@ export function AquaGlobe({
       const depthScale = Math.min(0.25, (selectedDepth / 2000) * 0.22)
       return GLOBE_RADIUS - depthScale
     }
-    return GLOBE_RADIUS + 0.003
+    return GLOBE_RADIUS + 0.015
   }, [isXRayMode, selectedDepth])
 
   return (
@@ -262,39 +317,32 @@ export function AquaGlobe({
           <meshStandardMaterial
             map={texture}
             transparent={true}
-            alphaTest={0.05} // Strict coastline mask: discards transparent land
+            opacity={0.88}
             roughness={0.22} // Specular ocean water surface gloss
             metalness={0.15}
-            depthWrite={!isXRayMode}
+            depthWrite={false} // Prevents z-fighting against underlying earth sphere
             side={THREE.DoubleSide}
           />
         </mesh>
       )}
 
-      {/* ── 3. Multi-Layer Atmospheric Rayleigh Scattering Glow ── */}
+      {/* ── 3. Photorealistic Fresnel Atmospheric Rayleigh Scattering Halo ── */}
       {showAtmosphere && (
         <>
-          {/* Inner atmospheric haze */}
+          {/* Inner atmospheric horizon haze */}
           <mesh>
-            <sphereGeometry args={[GLOBE_RADIUS * 1.018, 48, 32]} />
+            <sphereGeometry args={[GLOBE_RADIUS * 1.012, 64, 48]} />
             <meshBasicMaterial
               color="#38bdf8"
               transparent
-              opacity={isXRayMode ? 0.06 : 0.14}
+              opacity={isXRayMode ? 0.05 : 0.16}
               side={THREE.BackSide}
               blending={THREE.AdditiveBlending}
             />
           </mesh>
-          {/* Outer exosphere blue rim */}
-          <mesh>
-            <sphereGeometry args={[GLOBE_RADIUS * 1.04, 48, 32]} />
-            <meshBasicMaterial
-              color="#0284c7"
-              transparent
-              opacity={isXRayMode ? 0.04 : 0.09}
-              side={THREE.BackSide}
-              blending={THREE.AdditiveBlending}
-            />
+          {/* Outer Fresnel atmospheric limb glow */}
+          <mesh material={atmosphereShaderMaterial}>
+            <sphereGeometry args={[GLOBE_RADIUS * 1.045, 64, 48]} />
           </mesh>
         </>
       )}

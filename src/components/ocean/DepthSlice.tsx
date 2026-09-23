@@ -229,6 +229,9 @@ export function DepthSlice({
     }
   }
 
+  // At surface (0m), do not render subsurface cutting plane or equator torus
+  if (selectedDepth <= 0) return null
+
   return (
     <group position={[0, yPosition, 0]} rotation={[Math.PI / 2, 0, 0]}>
       {/* ── 1. Filled Dynamic Scientific Slicing Disc ─────────────────────── */}

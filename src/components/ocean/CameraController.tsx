@@ -54,11 +54,25 @@ export function CameraController({
   navTarget,
   onNavComplete,
 }: CameraControllerProps) {
-  const { camera } = useThree()
+  const { camera, size } = useThree()
   const isTransitioningRef = useRef(false)
   const destPosRef = useRef(new THREE.Vector3())
   const destTargetRef = useRef(new THREE.Vector3())
   const progressRef = useRef(0)
+
+  // Mobile portrait aspect ratio adaptation
+  useEffect(() => {
+    const aspect = size.width / Math.max(1, size.height)
+    if (camera instanceof THREE.PerspectiveCamera) {
+      if (aspect < 1.0) {
+        // Portrait phone: widen FOV to fit the entire globe
+        camera.fov = 42 / Math.max(0.65, aspect)
+      } else {
+        camera.fov = 42
+      }
+      camera.updateProjectionMatrix()
+    }
+  }, [size, camera])
 
   useEffect(() => {
     if (!navTarget) return
@@ -92,3 +106,4 @@ export function CameraController({
 
   return null
 }
+

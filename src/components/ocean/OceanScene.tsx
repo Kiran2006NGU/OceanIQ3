@@ -38,6 +38,7 @@ import { CameraController, type CameraNavTarget } from './CameraController'
 import { AnomalyMarkers } from './AnomalyMarkers'
 import type { OceanAnomaly } from '../ai/AnomalyDetectionPanel'
 import { PortionSelectionOverlay, type SelectedPortionBounds } from './PortionSelectionOverlay'
+import { CirclePlaceOverlay, type CircledPlaceResult } from './CirclePlaceOverlay'
 
 interface OceanSceneProps {
   selectedVariable: OceanVariable
@@ -66,6 +67,9 @@ interface OceanSceneProps {
   isSelectingPortion?: boolean
   onPortionSelected?: (bounds: SelectedPortionBounds) => void
   onCancelPortionSelection?: () => void
+  isCirclingPlace?: boolean
+  onCirclePlaceComplete?: (result: CircledPlaceResult) => void
+  onCancelCirclePlace?: () => void
 }
 
 export type { OrbitControlsImpl }
@@ -105,6 +109,9 @@ export function OceanScene({
   isSelectingPortion = false,
   onPortionSelected,
   onCancelPortionSelection,
+  isCirclingPlace = false,
+  onCirclePlaceComplete,
+  onCancelCirclePlace,
 }: OceanSceneProps) {
   const controlsRef = useRef<OrbitControlsImpl | null>(null)
 
@@ -117,27 +124,25 @@ export function OceanScene({
 
   return (
     <Canvas
+      dpr={[1, 2]}
       camera={{ position: [0.35, 0.65, 3.9], fov: 42, near: 0.1, far: 100 }}
       gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
       style={{ background: 'transparent' }}
       onClick={handleCanvasClick}
     >
-      {/* ── Studio & Sunlight Lighting (Brightened for scientific clarity) ── */}
-      <ambientLight intensity={1.1} color="#e8f4fd" />
+      {/* ── Studio & Sunlight Lighting (Realistic specular ocean curvature) ── */}
+      <ambientLight intensity={1.15} color="#e0f2fe" />
       <directionalLight
         position={[6, 5, 4]}
-        intensity={1.9}
+        intensity={2.1}
         color="#ffffff"
         castShadow={false}
       />
-      {/* Fill light from opposite side to eliminate dark zones */}
-      <directionalLight position={[-5, -2, -3]} intensity={0.7} color="#90cdf4" />
-      <pointLight position={[-4, -3, -3]} intensity={0.6} color="#38bdf8" />
-      {/* Subtle back glow for depth */}
-      <pointLight position={[0, 0, -6]} intensity={0.3} color="#1e3a5f" />
-
-      {/* ── Refined Clustered Celestial Starfield (Realistic Milky Way Band, not everywhere) ── */}
-      <CelestialStarField />
+      {/* Soft Fill light to illuminate Southern Ocean & bathymetry */}
+      <directionalLight position={[-5, -2, -3]} intensity={0.75} color="#7dd3fc" />
+      <pointLight position={[-4, -3, -3]} intensity={0.65} color="#38bdf8" />
+      {/* Deep back ambient glow for horizon depth */}
+      <pointLight position={[0, 0, -6]} intensity={0.35} color="#0f172a" />
 
       {/* ── Camera Interpolation Controller ── */}
       <CameraController
@@ -317,8 +322,8 @@ export function OceanScene({
       {/* ── 3D Pulsing Crosshair on Selected Model Point ── */}
       <SelectionTarget measurement={selectedMeasurement ?? null} />
 
-      {/* ── AI Threat Anomaly Pulsing Rings (Hidden during portion selection) ── */}
-      {onSelectAnomaly && !isSelectingPortion && <AnomalyMarkers onSelectAnomaly={onSelectAnomaly} />}
+      {/* ── AI Threat Anomaly Pulsing Rings (Hidden during portion selection or circle place) ── */}
+      {onSelectAnomaly && !isSelectingPortion && !isCirclingPlace && <AnomalyMarkers onSelectAnomaly={onSelectAnomaly} />}
 
       {/* ── Interactive 4-Sided Portion Drag Selector ── */}
       {isSelectingPortion && onPortionSelected && (
@@ -329,13 +334,22 @@ export function OceanScene({
         />
       )}
 
+      {/* ── Interactive Circular Sonar Place Selector ── */}
+      {isCirclingPlace && onCirclePlaceComplete && (
+        <CirclePlaceOverlay
+          isActive={isCirclingPlace}
+          onCircleComplete={onCirclePlaceComplete}
+          onCancel={onCancelCirclePlace ?? (() => { })}
+        />
+      )}
+
       {/* ── Smooth Orbit Controls ── */}
       <OrbitControls
         ref={controlsRef}
-        enablePan={!isSelectingPortion}
-        enableZoom
-        enableRotate={!isSelectingPortion}
-        autoRotate={autoRotate && !isSelectingPortion}
+        enablePan={!isSelectingPortion && !isCirclingPlace}
+        enableZoom={!isCirclingPlace}
+        enableRotate={!isSelectingPortion && !isCirclingPlace}
+        autoRotate={autoRotate && !isSelectingPortion && !isCirclingPlace}
         autoRotateSpeed={0.35}
         minDistance={2.2}
         maxDistance={12}

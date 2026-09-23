@@ -23,6 +23,7 @@ interface OceanPointPopupProps {
   onClose: () => void
   onOpenDepthInspector: () => void
   onSelectObservation: (id: string) => void
+  onOpenPlaceEcosystem?: () => void
 }
 
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -39,6 +40,7 @@ export function OceanPointPopup({
   lat, lon, depth, variable, timeIndex,
   observations, screenX, screenY,
   onClose, onOpenDepthInspector, onSelectObservation,
+  onOpenPlaceEcosystem,
 }: OceanPointPopupProps) {
   const cfg = VARIABLE_COLOR_CONFIGS[variable]
 
@@ -166,12 +168,25 @@ export function OceanPointPopup({
 
         {/* Actions */}
         <div className="flex flex-col gap-1.5">
+          {onOpenPlaceEcosystem && (
+            <button
+              onClick={() => {
+                onOpenPlaceEcosystem()
+                onClose()
+              }}
+              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-black text-[11px] font-mono font-bold shadow-lg transition-all cursor-pointer"
+            >
+              <span>🐠</span>
+              <span>Place Ecosystem Isolation View</span>
+            </button>
+          )}
+
           <a
             href={`/depth-view?lat=${lat}&lon=${lon}&variable=${variable}`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={onClose}
-            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black text-[11px] font-mono font-bold shadow-md transition-all cursor-pointer"
+            className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 text-[10px] font-mono font-bold transition-all cursor-pointer"
           >
             <span className="text-xs font-black">+</span>
             <span>3D Volumetric Depth View ↗</span>
