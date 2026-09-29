@@ -45,6 +45,7 @@ import {
 
 import { useDashboardState } from '@/hooks/useDashboardState'
 import { AlertManagementPanel, type OceanAlert } from '@/components/ai/AlertManagementPanel'
+import type { OceanAnomaly } from '@/components/ai/AnomalyDetectionPanel'
 import { UnifiedRiskPanel, type CoastalLocation } from '@/components/ocean/UnifiedRiskPanel'
 import { WeatherMonitor } from '@/components/ocean/WeatherMonitor'
 import { OceanScene } from '@/components/ocean/OceanScene'
@@ -184,7 +185,7 @@ export function DashboardPage() {
     if (target) setNavTarget(target)
   }, [])
 
-  const handleSelectAnomaly = useCallback((anomaly: OceanAlert) => {
+  const handleSelectAnomaly = useCallback((anomaly: OceanAlert | OceanAnomaly) => {
     state.setSelectedVariable(anomaly.variable)
     const idx = state.availableDepths.indexOf(anomaly.depth)
     state.setSelectedDepthIndex(idx >= 0 ? idx : 0)
