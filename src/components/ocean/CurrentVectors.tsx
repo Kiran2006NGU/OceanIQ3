@@ -93,6 +93,7 @@ export function CurrentVectors({
         const finalCount = displayVectors.length
 
         // Update matrices and colors for each instance
+        let validIdx = 0
         for (let i = 0; i < finalCount; i++) {
           const vec = displayVectors[i]
 
@@ -101,36 +102,46 @@ export function CurrentVectors({
           const [px, py, pz] = latLonToVec3(vec.lat, vec.lon, GLOBE_RADIUS + 0.015)
           const [tx, ty, tz] = currentArrowEnd(vec.lat, vec.lon, vec.u, vec.v, vectorScale)
 
+          if (!isFinite(px) || !isFinite(py) || !isFinite(pz) || !isFinite(tx) || !isFinite(ty) || !isFinite(tz)) continue
+
           TEMP_VEC3_P.set(px, py, pz)
           TEMP_VEC3_T.set(tx, ty, tz)
 
           const length = TEMP_VEC3_P.distanceTo(TEMP_VEC3_T)
+          if (length < 1e-4 || !isFinite(length)) continue
+
           TEMP_DIR.subVectors(TEMP_VEC3_T, TEMP_VEC3_P).normalize()
+          if (!isFinite(TEMP_DIR.x) || !isFinite(TEMP_DIR.y) || !isFinite(TEMP_DIR.z)) continue
 
           // Align Y-axis (default for Cylinder/Cone) to the direction vector
-          TEMP_QUAT.setFromUnitVectors(UP, TEMP_DIR)
+          if (Math.abs(TEMP_DIR.dot(UP)) > 0.9999) {
+            TEMP_QUAT.setFromAxisAngle(new THREE.Vector3(1, 0, 0), TEMP_DIR.y > 0 ? 0 : Math.PI)
+          } else {
+            TEMP_QUAT.setFromUnitVectors(UP, TEMP_DIR)
+          }
 
           // Position the shaft at the midpoint
           const shaftCenter = TEMP_VEC3_P.clone().add(
             TEMP_DIR.clone().multiplyScalar(length / 2)
           )
           TEMP_MAT4_SHAFT.compose(shaftCenter, TEMP_QUAT, new THREE.Vector3(1, length, 1))
-          shaftRef.current.setMatrixAt(i, TEMP_MAT4_SHAFT)
+          shaftRef.current.setMatrixAt(validIdx, TEMP_MAT4_SHAFT)
 
           // Position the head at the tip
           TEMP_MAT4_HEAD.compose(TEMP_VEC3_T, TEMP_QUAT, new THREE.Vector3(1, 1, 1))
-          headRef.current.setMatrixAt(i, TEMP_MAT4_HEAD)
+          headRef.current.setMatrixAt(validIdx, TEMP_MAT4_HEAD)
 
           // Apply scientific colormap based on magnitude
           const [r, g, b] = velocityToRGB(vec.magnitude)
           TEMP_COLOR.setRGB(r, g, b)
-          shaftRef.current.setColorAt(i, TEMP_COLOR)
-          headRef.current.setColorAt(i, TEMP_COLOR)
+          shaftRef.current.setColorAt(validIdx, TEMP_COLOR)
+          headRef.current.setColorAt(validIdx, TEMP_COLOR)
+          validIdx++
         }
 
         // Apply updates to the GPU
-        shaftRef.current.count = finalCount
-        headRef.current.count = finalCount
+        shaftRef.current.count = validIdx
+        headRef.current.count = validIdx
 
         shaftRef.current.instanceMatrix.needsUpdate = true
         headRef.current.instanceMatrix.needsUpdate = true
@@ -142,7 +153,7 @@ export function CurrentVectors({
           headRef.current.instanceColor.needsUpdate = true
         }
 
-        setCount(finalCount)
+        setCount(validIdx)
       })
       .catch((err) => {
         console.warn('Failed to load current vectors:', err)
@@ -163,8 +174,8 @@ export function CurrentVectors({
 
   return (
     <group>
-      <instancedMesh ref={shaftRef} args={[shaftGeo, material, maxDisplayed]} />
-      <instancedMesh ref={headRef} args={[headGeo, material, maxDisplayed]} />
+      <instancedMesh ref={shaftRef} args={[shaftGeo, material, maxDisplayed]} frustumCulled={false} />
+      <instancedMesh ref={headRef} args={[headGeo, material, maxDisplayed]} frustumCulled={false} />
     </group>
   )
 }

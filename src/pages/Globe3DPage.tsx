@@ -17,7 +17,7 @@ import { Compass, Sparkles, ShieldAlert } from 'lucide-react'
 
 export function Globe3DPage() {
   const state = useDashboardState()
-  const [globeMode, setGlobeMode] = useState<'heatmap' | 'satellite'>('heatmap')
+  const [globeMode, setGlobeMode] = useState<'heatmap' | 'satellite'>('satellite')
   const [visibleModelVolume, setVisibleModelVolume] = useState(false)
   const [selectedRegion, setSelectedRegion] = useState('Bay of Bengal')
   const [navTarget, setNavTarget] = useState<CameraNavTarget | null>(null)

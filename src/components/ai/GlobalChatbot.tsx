@@ -6,6 +6,7 @@
  * - Gemini / Claude / GPT-style rich conversational responses (markdown, headings, bullets)
  * - 40+ universal site control commands (pages, variables, depths, layers, themes, modals)
  * - Deep in-situ devices & oceanographic knowledge base (Argo, Gliders, OMNI, RAMA, BGC, CTD)
+ * - Voice input via Web Speech API (mic button — auto-transcribes and submits)
  * - Large, legible, modern typography (14px+ base text, clear headings, generous line-height)
  * - Optional live Gemini API key support (gemini-1.5-flash direct browser call)
  * - Typing / streaming animation like ChatGPT
@@ -39,6 +40,9 @@ import {
   Sliders,
   ShieldAlert,
   Cpu,
+  Mic,
+  MicOff,
+  Volume2,
 } from 'lucide-react'
 import { useTheme } from '@/context/ThemeContext'
 import type { OceanTheme } from '@/context/ThemeContext'
@@ -216,6 +220,42 @@ export function GlobalChatbot({
 
   // Conversation memory
   const [conversationHistory, setConversationHistory] = useState<ConversationTurn[]>([])
+
+  // Voice input
+  const [isListening, setIsListening] = useState(false)
+  const recognitionRef = useRef<any>(null)
+  // processQueryRef will be set after processQuery is defined below
+  const processQueryRef = useRef<((q: string) => void) | null>(null)
+
+  const startVoiceInput = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      alert('Voice input is not supported in this browser. Try Chrome or Edge.')
+      return
+    }
+    if (isListening) {
+      recognitionRef.current?.stop()
+      setIsListening(false)
+      return
+    }
+    const recognition = new SpeechRecognition()
+    recognition.lang = 'en-IN'
+    recognition.continuous = false
+    recognition.interimResults = false
+    recognition.maxAlternatives = 1
+    recognitionRef.current = recognition
+
+    recognition.onstart = () => setIsListening(true)
+    recognition.onend = () => setIsListening(false)
+    recognition.onerror = () => setIsListening(false)
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript
+      setInput(transcript)
+      // Auto-submit via ref (avoids stale closure)
+      setTimeout(() => processQueryRef.current?.(transcript), 300)
+    }
+    recognition.start()
+  }, [isListening])
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -876,6 +916,9 @@ The Indian Ocean is unique among Earth's oceans as it is bounded by the Asian co
     }
   }
 
+  // Update voice input ref to always call latest processQuery
+  processQueryRef.current = processQuery
+
   const handleActionClick = (action: BotAction) => {
     action.execute()
     action.executed = true
@@ -1096,10 +1139,27 @@ How can I assist your Indian Ocean exploration today?`,
               type="text"
               value={input}
               onChange={e => setInput(e.target.value)}
-              placeholder="Ask anything — in-situ sensors, physics, thermal heatwaves, IOD, site navigation..."
+              placeholder={isListening ? '🎤 Listening... speak your question' : 'Ask anything — in-situ sensors, physics, thermal heatwaves, IOD, site navigation...'}
               disabled={isThinking || isTypingActive}
-              className="flex-1 px-4 py-3 rounded-xl bg-black/60 border border-cyan-500/35 text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 text-sm font-sans transition-all disabled:opacity-50"
+              className={`flex-1 px-4 py-3 rounded-xl bg-black/60 border text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 text-sm font-sans transition-all disabled:opacity-50 ${
+                isListening
+                  ? 'border-red-400/60 focus:border-red-400 focus:ring-red-400/50 placeholder:text-red-300'
+                  : 'border-cyan-500/35 focus:border-cyan-400 focus:ring-cyan-400/50'
+              }`}
             />
+            {/* Voice input button */}
+            <button
+              type="button"
+              onClick={startVoiceInput}
+              title={isListening ? 'Stop listening' : 'Voice input (speak your question)'}
+              className={`p-3 rounded-xl font-bold transition-all cursor-pointer shadow-lg ${
+                isListening
+                  ? 'bg-red-500 text-white animate-pulse ring-2 ring-red-400/60 shadow-red-900/50'
+                  : 'bg-white/10 text-slate-300 hover:bg-white/15 hover:text-white border border-white/15'
+              }`}
+            >
+              {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+            </button>
             <button
               type="submit"
               disabled={!input.trim() || isThinking || isTypingActive}
@@ -1113,6 +1173,12 @@ How can I assist your Indian Ocean exploration today?`,
             <span className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 inline-block" />
               OceanIQ Domain Brain Active
+              {isListening && (
+                <span className="ml-2 flex items-center gap-1 text-red-400 animate-pulse">
+                  <Mic size={10} />
+                  Voice Active
+                </span>
+              )}
             </span>
             <span>Route: {location.pathname}</span>
           </div>

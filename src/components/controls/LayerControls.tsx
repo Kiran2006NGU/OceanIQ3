@@ -16,6 +16,7 @@ import type { VisibleLayers } from '@/hooks/useDashboardState'
 interface LayerControlsProps {
   visibleLayers: VisibleLayers
   onToggle: (layer: keyof VisibleLayers) => void
+  onBatchSet?: (partial: Partial<VisibleLayers>) => void
 }
 
 interface LayerOption {
@@ -110,18 +111,128 @@ function LayerSection({ title, layers, visibleLayers, onToggle }: {
   )
 }
 
-export function LayerControls({ visibleLayers, onToggle }: LayerControlsProps) {
+export function LayerControls({ visibleLayers, onToggle, onBatchSet }: LayerControlsProps) {
   const activeCount = Object.values(visibleLayers).filter(Boolean).length
 
+  const handleCleanView = () => {
+    if (onBatchSet) {
+      onBatchSet({
+        oceanModel: true,
+        argo: false,
+        glider: false,
+        ctd: false,
+        currentVectors: false,
+        depthSlice: false,
+        isosurface: false,
+        valueLabels: false,
+        currentStreamlines: false,
+        seaLevel: false,
+        phytoplankton: false,
+        zooplankton: false,
+        pfzFish: false,
+      })
+    }
+  }
+
+  const handleSensorsOnly = () => {
+    if (onBatchSet) {
+      onBatchSet({
+        oceanModel: true,
+        argo: true,
+        glider: true,
+        ctd: true,
+        currentVectors: false,
+        depthSlice: true,
+        currentStreamlines: false,
+        valueLabels: false,
+      })
+    }
+  }
+
+  const handleCurrentsView = () => {
+    if (onBatchSet) {
+      onBatchSet({
+        oceanModel: true,
+        currentVectors: true,
+        currentStreamlines: true,
+        argo: false,
+        glider: false,
+        ctd: false,
+        valueLabels: false,
+      })
+    }
+  }
+
+  const handleBiologyView = () => {
+    if (onBatchSet) {
+      onBatchSet({
+        oceanModel: true,
+        phytoplankton: true,
+        zooplankton: true,
+        pfzFish: true,
+        argo: false,
+        glider: false,
+        ctd: false,
+        currentVectors: false,
+        currentStreamlines: false,
+        valueLabels: false,
+      })
+    }
+  }
+
   return (
-    <div>
-      {/* Active count badge */}
-      <div className="flex items-center justify-between px-2 py-1.5 mb-1">
+    <div className="space-y-3">
+      {/* Active count badge & Quick Presets Header */}
+      <div className="flex items-center justify-between px-1">
         <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Visualization Layers</span>
         <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-400/20">
           {activeCount} active
         </span>
       </div>
+
+      {/* Quick 1-Click Presets */}
+      {onBatchSet && (
+        <div className="p-2 rounded-xl bg-black/40 border border-white/10 space-y-1.5">
+          <div className="text-[9px] uppercase font-mono font-semibold text-slate-400 flex items-center justify-between">
+            <span>Quick Presets</span>
+            <span className="text-[8px] text-cyan-400">1-Click Filter</span>
+          </div>
+          <div className="grid grid-cols-2 gap-1 font-mono text-[10px]">
+            <button
+              onClick={handleCleanView}
+              className="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/5 text-left flex items-center gap-1 transition-all cursor-pointer"
+              title="Clean ocean model only — zero clutter"
+            >
+              <span>🌊</span>
+              <span>Clean Globe</span>
+            </button>
+            <button
+              onClick={handleSensorsOnly}
+              className="px-2 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/20 text-left flex items-center gap-1 transition-all cursor-pointer"
+              title="Argo floats, autonomous gliders, CTD stations"
+            >
+              <span>📡</span>
+              <span>In-Situ Nets</span>
+            </button>
+            <button
+              onClick={handleCurrentsView}
+              className="px-2 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 text-left flex items-center gap-1 transition-all cursor-pointer"
+              title="Vector arrows and dynamic current particles"
+            >
+              <span>🌀</span>
+              <span>Flow Currents</span>
+            </button>
+            <button
+              onClick={handleBiologyView}
+              className="px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 text-left flex items-center gap-1 transition-all cursor-pointer"
+              title="Phytoplankton, Zooplankton, and PFZ fishing zones"
+            >
+              <span>🐟</span>
+              <span>Ecosystem</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       <LayerSection title="Ocean Model" layers={CORE_LAYERS} visibleLayers={visibleLayers} onToggle={onToggle} />
       <LayerSection title="In-Situ Platforms" layers={PLATFORM_LAYERS} visibleLayers={visibleLayers} onToggle={onToggle} />

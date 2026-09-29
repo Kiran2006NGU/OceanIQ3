@@ -1,8 +1,16 @@
 /**
- * LandingPage.tsx — Page 1: Mission Control & Operational Overview
+ * LandingPage.tsx — Mission Control & Operational Overview
  * SIH 26067 | OceanIQ — Indian Ocean 3D Intelligence Platform
+ *
+ * Enhanced with:
+ * - Immersive ocean video/animated background
+ * - Dynamic wave animations
+ * - Marine-themed glassmorphism cards
+ * - Weather widget integration
+ * - Improved visual hierarchy
  */
 
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Globe,
@@ -19,10 +27,14 @@ import {
   LifeBuoy,
   Fish,
   Compass,
-  CheckCircle2,
+  Cloud,
+  Wind,
+  Thermometer,
+  Bell,
   ExternalLink,
 } from 'lucide-react'
 import { APP_CONFIG } from '@/config'
+import { WeatherMonitor } from '@/components/ocean/WeatherMonitor'
 
 const LIVE_METRICS = [
   { label: 'Active Forecast Cycle', value: '12:00 UTC', sub: 'INCOIS High-Res Model', icon: <Globe className="text-cyan-400" size={18} /> },
@@ -35,7 +47,7 @@ const SCENARIOS = [
   {
     id: 'heatwave',
     title: 'Marine Heatwave & Bleaching',
-    desc: 'Monitor sea surface temperature anomalies > +1.5°C across coral reef biomes in Lakshadweep and Andaman.',
+    desc: 'Monitor sea surface temperature anomalies >+1.5°C across coral reef biomes in Lakshadweep and Andaman.',
     tag: 'Disaster Prevention',
     link: '/operations?scenario=heatwave',
     color: 'from-red-500/20 to-amber-500/20 border-red-500/40 text-red-300',
@@ -78,6 +90,8 @@ const QUICK_MODULES = [
     path: '/dashboard',
     cta: 'Launch Workstation',
     primary: true,
+    badge: 'Primary',
+    color: 'cyan',
   },
   {
     title: 'Observation Explorer',
@@ -85,6 +99,7 @@ const QUICK_MODULES = [
     icon: <Radio className="text-emerald-400" size={24} />,
     path: '/observations',
     cta: 'Browse Telemetry',
+    color: 'emerald',
   },
   {
     title: 'Model Validation Suite',
@@ -92,6 +107,7 @@ const QUICK_MODULES = [
     icon: <Scale className="text-purple-400" size={24} />,
     path: '/compare',
     cta: 'Validate Model',
+    color: 'purple',
   },
   {
     title: 'Data Hub & Ingestion',
@@ -99,6 +115,7 @@ const QUICK_MODULES = [
     icon: <Database className="text-amber-400" size={24} />,
     path: '/data',
     cta: 'Manage Datasets',
+    color: 'amber',
   },
   {
     title: 'Scientific Analysis Lab',
@@ -106,48 +123,173 @@ const QUICK_MODULES = [
     icon: <Activity className="text-pink-400" size={24} />,
     path: '/analysis',
     cta: 'Start Diagnostics',
+    color: 'pink',
   },
   {
-    title: 'Science & Public Outreach',
-    desc: 'Interactive 3D educational explainers on Argo profiling cycles, monsoonal current reversals, and salinity dynamics.',
+    title: 'AI Intelligence',
+    desc: 'MOMENT-1-small time-series anomaly detection, PINN-lite current predictor, and NLP ocean co-pilot.',
     icon: <Sparkles className="text-indigo-400" size={24} />,
-    path: '/science',
-    cta: 'Explore Science',
+    path: '/ai',
+    cta: 'Explore AI',
+    color: 'indigo',
   },
 ]
 
-export function LandingPage() {
+// ── Animated wave path for SVG decoration ─────────────────────────────────────
+function AnimatedOceanWaves() {
   return (
-    <div className="flex-1 overflow-y-auto bg-[#010610] text-slate-100 font-sans selection:bg-cyan-500 selection:text-black">
-      {/* ── 1. MISSION CONTROL HERO ─────────────────────────────────────── */}
-      <section className="relative overflow-hidden border-b border-white/10 px-4 py-16 sm:px-6 lg:px-8">
-        {/* Ambient background glow */}
+    <div className="absolute bottom-0 left-0 right-0 z-0 pointer-events-none overflow-hidden">
+      <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="w-full h-20 sm:h-28">
+        <path
+          d="M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z"
+          fill="rgba(6,182,212,0.06)"
+          className="animate-wave-slow"
+        />
+        <path
+          d="M0,70 C200,40 450,100 720,70 C990,40 1220,95 1440,70 L1440,120 L0,120 Z"
+          fill="rgba(59,130,246,0.05)"
+          className="animate-wave-medium"
+        />
+        <path
+          d="M0,80 C360,50 720,100 1080,70 C1260,55 1380,85 1440,80 L1440,120 L0,120 Z"
+          fill="rgba(16,185,129,0.04)"
+          className="animate-wave-fast"
+        />
+      </svg>
+    </div>
+  )
+}
+
+// ── Floating particle dots for depth feel ─────────────────────────────────────
+function OceanParticles() {
+  const particles = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    left: `${5 + (i * 4.7) % 90}%`,
+    top: `${10 + (i * 7.3) % 75}%`,
+    size: 1 + (i % 3),
+    delay: (i * 0.3) % 4,
+    duration: 3 + (i * 0.5) % 4,
+    opacity: 0.1 + (i % 5) * 0.04,
+  }))
+
+  return (
+    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+      {particles.map(p => (
         <div
-          className="pointer-events-none absolute inset-0 -z-10 opacity-40"
+          key={p.id}
+          className="absolute rounded-full bg-cyan-400"
           style={{
-            background:
-              'radial-gradient(circle at 50% 20%, rgba(0, 180, 216, 0.18) 0%, rgba(13, 27, 42, 0) 70%)',
+            left: p.left,
+            top: p.top,
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+            opacity: p.opacity,
+            animation: `particleFloat ${p.duration}s ease-in-out ${p.delay}s infinite alternate`,
           }}
         />
+      ))}
+    </div>
+  )
+}
 
-        <div className="mx-auto max-w-6xl text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/40 text-cyan-300 text-xs font-mono font-semibold mb-6 shadow-sm shadow-cyan-900/40">
+export function LandingPage() {
+  const [alertCount] = useState(4)
+  const [showWeather, setShowWeather] = useState(false)
+
+  return (
+    <div className="flex-1 overflow-y-auto bg-[#010610] text-slate-100 font-sans selection:bg-cyan-500 selection:text-black">
+
+      {/* CSS animations */}
+      <style>{`
+        @keyframes particleFloat {
+          0% { transform: translateY(0) scale(1); }
+          100% { transform: translateY(-20px) scale(1.2); }
+        }
+        @keyframes waveMoveSlow {
+          0%, 100% { d: path("M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z"); }
+          50% { d: path("M0,50 C240,90 480,30 720,50 C960,90 1200,30 1440,50 L1440,120 L0,120 Z"); }
+        }
+        @keyframes shimmer {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        .ocean-gradient-text {
+          background: linear-gradient(135deg, #ffffff, #93c5fd, #22d3ee, #ffffff);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: shimmer 4s linear infinite;
+        }
+      `}</style>
+
+      {/* ── 1. HERO SECTION with immersive ocean background ──────────────────── */}
+      <section className="relative overflow-hidden border-b border-white/10 px-4 py-20 sm:px-6 lg:px-8 min-h-[80vh] flex items-center">
+
+        {/* Deep ocean layered background */}
+        <div className="absolute inset-0 -z-10">
+          {/* Base deep ocean gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#020c1a] via-[#021a2e] to-[#010610]" />
+
+          {/* Bioluminescent glow layers */}
+          <div
+            className="absolute inset-0 opacity-30"
+            style={{
+              background: 'radial-gradient(ellipse 80% 60% at 30% 20%, rgba(0, 180, 216, 0.2) 0%, transparent 60%)',
+            }}
+          />
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{
+              background: 'radial-gradient(ellipse 60% 80% at 70% 70%, rgba(16, 185, 129, 0.15) 0%, transparent 60%)',
+            }}
+          />
+          <div
+            className="absolute inset-0 opacity-15"
+            style={{
+              background: 'radial-gradient(ellipse 50% 50% at 50% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 70%)',
+            }}
+          />
+
+          {/* Underwater light caustics simulation */}
+          <div className="absolute top-0 left-0 right-0 h-32 opacity-10"
+            style={{
+              background: 'repeating-linear-gradient(45deg, rgba(0,180,216,0.3) 0px, transparent 3px, transparent 30px, rgba(0,180,216,0.2) 33px)',
+              animation: 'shimmer 8s linear infinite',
+            }}
+          />
+
+          {/* Animated ocean particles */}
+          <OceanParticles />
+        </div>
+
+        {/* Animated wave decoration at bottom of hero */}
+        <AnimatedOceanWaves />
+
+        <div className="mx-auto max-w-6xl text-center relative z-10 w-full">
+          {/* Live badge */}
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/40 text-cyan-300 text-xs font-mono font-semibold mb-6 shadow-sm shadow-cyan-900/40 backdrop-blur-sm">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
             INCOIS · Digital Twin of the Indian Ocean
           </div>
 
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-cyan-400 mb-5">
-            Understand the Ocean in 3D
+          {/* Hero headline with ocean gradient */}
+          <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl mb-4">
+            <span className="ocean-gradient-text">Understand the Ocean</span>
+            <br />
+            <span className="text-white opacity-90">in 3D</span>
           </h1>
 
           <p className="mx-auto max-w-3xl text-base text-slate-300 sm:text-lg leading-relaxed mb-8">
-            A high-performance scientific visualization workstation integrating 3D numerical ocean models with in-situ Argo, Glider, and CTD observations across India’s Exclusive Economic Zone.
+            A high-performance scientific visualization workstation integrating 3D numerical ocean models
+            with in-situ Argo, Glider, and CTD observations across India's Exclusive Economic Zone.
           </p>
 
+          {/* CTA buttons */}
           <div className="flex flex-wrap items-center justify-center gap-3.5 mb-14">
             <Link
               to="/dashboard"
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-bold text-sm shadow-lg shadow-cyan-900/50 transition-all transform hover:-translate-y-0.5"
+              className="flex items-center gap-2 px-7 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-bold text-sm shadow-2xl shadow-cyan-900/50 transition-all transform hover:-translate-y-1 hover:scale-105"
             >
               <Sparkles size={16} />
               <span>Launch 3D Explorer</span>
@@ -156,7 +298,7 @@ export function LandingPage() {
 
             <Link
               to="/observations"
-              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#030d1a]/90 hover:bg-white/10 border border-white/15 text-slate-200 text-sm font-semibold transition-all"
+              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/5 backdrop-blur-md hover:bg-white/10 border border-white/15 hover:border-cyan-400/40 text-slate-200 text-sm font-semibold transition-all hover:-translate-y-0.5"
             >
               <Radio size={16} className="text-emerald-400" />
               <span>Explore In-Situ Telemetry</span>
@@ -164,11 +306,24 @@ export function LandingPage() {
 
             <Link
               to="/compare"
-              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#030d1a]/90 hover:bg-white/10 border border-white/15 text-slate-200 text-sm font-semibold transition-all"
+              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/5 backdrop-blur-md hover:bg-white/10 border border-white/15 hover:border-purple-400/40 text-slate-200 text-sm font-semibold transition-all hover:-translate-y-0.5"
             >
               <Scale size={16} className="text-purple-400" />
               <span>Model vs Observation</span>
             </Link>
+
+            {/* Weather toggle */}
+            <button
+              onClick={() => setShowWeather(w => !w)}
+              className={`flex items-center gap-2 px-5 py-3 rounded-xl border text-sm font-semibold transition-all hover:-translate-y-0.5 cursor-pointer ${
+                showWeather
+                  ? 'bg-sky-500/20 border-sky-400/50 text-sky-200'
+                  : 'bg-white/5 backdrop-blur-md border-white/15 text-slate-200 hover:bg-white/10'
+              }`}
+            >
+              <Cloud size={16} className="text-sky-400" />
+              <span>Marine Weather</span>
+            </button>
           </div>
 
           {/* Live System Metrics Strip */}
@@ -176,7 +331,7 @@ export function LandingPage() {
             {LIVE_METRICS.map((m) => (
               <div
                 key={m.label}
-                className="p-3.5 rounded-xl bg-[#030d1a]/85 border border-white/10 backdrop-blur-md shadow-md"
+                className="p-3.5 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 shadow-lg hover:border-cyan-400/30 transition-all group"
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
@@ -184,7 +339,7 @@ export function LandingPage() {
                   </span>
                   {m.icon}
                 </div>
-                <div className="text-lg font-black font-mono text-white tracking-tight">{m.value}</div>
+                <div className="text-lg font-black font-mono text-white tracking-tight group-hover:text-cyan-200 transition-colors">{m.value}</div>
                 <div className="text-[10px] text-slate-400 font-mono mt-0.5">{m.sub}</div>
               </div>
             ))}
@@ -192,7 +347,46 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── 2. OPERATIONAL DECISION PRESETS ──────────────────────────────── */}
+      {/* ── WEATHER PANEL (inline, collapsible) ──────────────────────────────── */}
+      {showWeather && (
+        <section className="px-4 py-6 sm:px-6 lg:px-8 border-b border-white/10 bg-[#020c1a]">
+          <div className="mx-auto max-w-6xl">
+            <div className="flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-widest text-sky-400 mb-4">
+              <Cloud size={14} />
+              <span>Marine Weather Monitoring</span>
+              <span className="text-slate-500 font-normal normal-case">· Powered by Open-Meteo API</span>
+            </div>
+            <div className="h-80 bg-[#030d1a]/80 rounded-2xl border border-sky-500/20 p-4">
+              <WeatherMonitor compact={false} />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── 2. ALERT SUMMARY STRIP ───────────────────────────────────────────── */}
+      <section className="px-4 py-3 sm:px-6 lg:px-8 border-b border-white/10 bg-gradient-to-r from-red-950/20 via-[#010b17] to-amber-950/10">
+        <div className="mx-auto max-w-6xl flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Bell size={16} className="text-red-400 animate-bounce" />
+            <span className="text-sm font-bold text-white">{alertCount} Active Oceanic Alerts</span>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-red-500/20 text-red-300 border border-red-400/40 animate-pulse">1 CRITICAL</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-400/40">1 WARNING</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-sky-500/20 text-sky-300 border border-sky-400/40">2 ADVISORY</span>
+            </div>
+          </div>
+          <Link
+            to="/operations"
+            className="flex items-center gap-1.5 text-xs font-mono font-bold text-red-300 hover:text-red-200 transition-colors"
+          >
+            <ShieldAlert size={12} />
+            View All Alerts
+            <ArrowRight size={11} />
+          </Link>
+        </div>
+      </section>
+
+      {/* ── 3. OPERATIONAL DECISION PRESETS ──────────────────────────────────── */}
       <section className="px-4 py-12 sm:px-6 lg:px-8 border-b border-white/10 bg-[#020914]">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8">
@@ -219,7 +413,7 @@ export function LandingPage() {
               <Link
                 key={s.id}
                 to={s.link}
-                className={`p-4 rounded-xl bg-gradient-to-b ${s.color} border backdrop-blur-md flex flex-col justify-between group hover:scale-[1.02] transition-all shadow-lg`}
+                className={`p-4 rounded-xl bg-gradient-to-b ${s.color} border backdrop-blur-md flex flex-col justify-between group hover:scale-[1.02] hover:-translate-y-1 transition-all shadow-lg`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-2.5">
@@ -243,8 +437,19 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── 3. PLATFORM CORE MODULES ────────────────────────────────────── */}
-      <section className="px-4 py-14 sm:px-6 lg:px-8">
+      {/* ── 4. PLATFORM CORE MODULES ─────────────────────────────────────────── */}
+      <section className="px-4 py-14 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Subtle ocean depth background */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-gradient-to-b from-[#010610] via-[#020b18] to-[#010610]" />
+          <div
+            className="absolute inset-0 opacity-10"
+            style={{
+              background: 'radial-gradient(circle at 50% 50%, rgba(0,180,216,0.15) 0%, transparent 60%)',
+            }}
+          />
+        </div>
+
         <div className="mx-auto max-w-6xl">
           <div className="text-center mb-10">
             <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-2">
@@ -259,16 +464,21 @@ export function LandingPage() {
             {QUICK_MODULES.map((m) => (
               <div
                 key={m.title}
-                className="p-5 rounded-2xl bg-[#030d1a]/80 border border-white/10 hover:border-cyan-400/40 transition-all flex flex-col justify-between shadow-xl group"
+                className="p-5 rounded-2xl bg-white/3 backdrop-blur-sm border border-white/8 hover:border-cyan-400/30 hover:-translate-y-1 transition-all flex flex-col justify-between shadow-xl group relative overflow-hidden"
               >
+                {/* Hover glow effect */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                  style={{ background: `radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,180,216,0.06) 0%, transparent 70%)` }}
+                />
+
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover:scale-110 transition-transform">
+                    <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover:scale-110 group-hover:border-cyan-400/30 transition-all">
                       {m.icon}
                     </div>
-                    {m.primary && (
+                    {m.badge && (
                       <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/40">
-                        Primary Workstation
+                        {m.badge}
                       </span>
                     )}
                   </div>
@@ -282,7 +492,7 @@ export function LandingPage() {
                   to={m.path}
                   className={`w-full py-2 px-3 rounded-lg text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all ${
                     m.primary
-                      ? 'bg-cyan-500 text-black hover:bg-cyan-400 shadow-md shadow-cyan-950/50'
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black hover:from-cyan-400 hover:to-blue-500 shadow-md shadow-cyan-950/50'
                       : 'bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 hover:border-cyan-400/30'
                   }`}
                 >
@@ -295,7 +505,43 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── 4. FOOTER ───────────────────────────────────────────────────── */}
+      {/* ── 5. OCEAN DEPTH INDICATOR STRIP ───────────────────────────────────── */}
+      <section className="px-4 py-6 sm:px-6 lg:px-8 border-t border-white/10 bg-gradient-to-r from-[#010b17] to-[#020c1a]">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex items-center gap-3 overflow-x-auto pb-2 no-scrollbar">
+            {[
+              { depth: '0m', label: 'Sea Surface', color: '#22d3ee', temp: '29°C', desc: 'Photic zone, solar warming' },
+              { depth: '100m', label: 'Epipelagic', color: '#3b82f6', temp: '25°C', desc: 'Upper thermocline' },
+              { depth: '200m', label: 'Mesopelagic', color: '#6366f1', temp: '18°C', desc: 'Oxygen minimum zone begins' },
+              { depth: '500m', label: 'Deep Water', color: '#7c3aed', temp: '10°C', desc: 'Antarctic intermediate water' },
+              { depth: '1000m', label: 'Bathypelagic', color: '#1e1b4b', temp: '5°C', desc: 'No sunlight penetration' },
+              { depth: '2000m', label: 'Abyssal', color: '#0f0f1a', temp: '3°C', desc: 'Dense cold bottom water' },
+            ].map((z, i) => (
+              <div
+                key={z.depth}
+                className="flex-shrink-0 flex flex-col items-center gap-1 text-center"
+              >
+                <div
+                  className="w-12 h-12 rounded-xl border border-white/15 flex items-center justify-center font-mono text-[11px] font-bold text-white"
+                  style={{ backgroundColor: z.color + '40', borderColor: z.color + '50' }}
+                >
+                  {z.depth}
+                </div>
+                <div className="text-[9px] font-mono text-slate-400">{z.label}</div>
+                <div className="text-[9px] font-mono" style={{ color: z.color }}>{z.temp}</div>
+                {i < 5 && (
+                  <div className="absolute mt-10 text-slate-600 text-[9px]">↓</div>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] font-mono text-slate-500 mt-3">
+            Ocean depth zones visualized in the 3D Water Column Explorer — from sea surface (0m) to abyssal plains (2000m+)
+          </p>
+        </div>
+      </section>
+
+      {/* ── 6. FOOTER ──────────────────────────────────────────────────────────── */}
       <footer className="border-t border-white/10 px-4 py-8 bg-[#020813] text-xs font-mono text-slate-500">
         <div className="mx-auto max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">

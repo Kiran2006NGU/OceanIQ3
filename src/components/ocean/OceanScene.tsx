@@ -13,6 +13,7 @@
  */
 
 import { useRef, useCallback } from 'react'
+import * as THREE from 'three'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
@@ -117,26 +118,49 @@ export function OceanScene({
 
   return (
     <Canvas
-      camera={{ position: [0.35, 0.65, 3.9], fov: 42, near: 0.1, far: 100 }}
-      gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-      style={{ background: 'transparent' }}
+      camera={{ position: [0.35, 0.65, 3.9], fov: 42, near: 0.1, far: 200 }}
+      gl={{
+        antialias: true,
+        alpha: true,
+        powerPreference: 'high-performance',
+        toneMapping: THREE.ACESFilmicToneMapping,
+        toneMappingExposure: 1.15,
+      }}
+      style={{ background: '#020409' }}
       onClick={handleCanvasClick}
     >
-      {/* ── Studio & Sunlight Lighting (Brightened for scientific clarity) ── */}
-      <ambientLight intensity={1.1} color="#e8f4fd" />
+      {/* ── Balanced 360-Degree Lighting (Vibrant, Light-Colored Oceans & Continents) ── */}
+      <ambientLight intensity={1.38} color="#f0f7ff" />
+      {/* Primary key light for specular ocean shine and relief bumps */}
       <directionalLight
-        position={[6, 5, 4]}
-        intensity={1.9}
+        position={[5, 4, 6]}
+        intensity={1.35}
         color="#ffffff"
         castShadow={false}
       />
-      {/* Fill light from opposite side to eliminate dark zones */}
-      <directionalLight position={[-5, -2, -3]} intensity={0.7} color="#90cdf4" />
-      <pointLight position={[-4, -3, -3]} intensity={0.6} color="#38bdf8" />
-      {/* Subtle back glow for depth */}
-      <pointLight position={[0, 0, -6]} intensity={0.3} color="#1e3a5f" />
+      {/* Fill light from opposite side so no hemisphere is plunged into shadow */}
+      <directionalLight
+        position={[-6, 2, 5]}
+        intensity={1.15}
+        color="#edf5fc"
+        castShadow={false}
+      />
+      {/* Top light to illuminate northern continents and polar regions */}
+      <directionalLight
+        position={[0, 7, 2]}
+        intensity={0.75}
+        color="#ffffff"
+        castShadow={false}
+      />
+      {/* Back and underside fill for southern oceans and reverse camera angles */}
+      <directionalLight
+        position={[0, -4, -5]}
+        intensity={0.65}
+        color="#e0edfa"
+        castShadow={false}
+      />
 
-      {/* ── Refined Clustered Celestial Starfield (Realistic Milky Way Band, not everywhere) ── */}
+      {/* ── Refined Clustered Celestial Starfield & Deep Space Skybox ── */}
       <CelestialStarField />
 
       {/* ── Camera Interpolation Controller ── */}

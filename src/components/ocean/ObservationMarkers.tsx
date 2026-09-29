@@ -18,7 +18,7 @@ import { useFrame } from '@react-three/fiber'
 import type { MockObservation, ModelTime } from '@/services/data/mockOceanData'
 import { latLonToVec3, GLOBE_RADIUS } from '@/utils/geoUtils'
 
-const MARKER_ALTITUDE = 0.035
+const MARKER_ALTITUDE = 0.025
 
 interface ObservationMarkersProps {
   observations: MockObservation[]
@@ -114,7 +114,7 @@ function SingleMarker({
         <group>
           {/* Buoy sphere */}
           <mesh>
-            <sphereGeometry args={[0.045, 16, 16]} />
+            <sphereGeometry args={[0.028, 12, 12]} />
             <meshStandardMaterial
               color="#00b4d8"
               emissive="#0077b6"
@@ -125,13 +125,13 @@ function SingleMarker({
             />
           </mesh>
           {/* Top communication antenna stalk */}
-          <mesh position={[0, 0.04, 0]}>
-            <cylinderGeometry args={[0.003, 0.003, 0.05, 8]} />
+          <mesh position={[0, 0.025, 0]}>
+            <cylinderGeometry args={[0.002, 0.002, 0.03, 6]} />
             <meshStandardMaterial color="#38bdf8" />
           </mesh>
           {/* Antenna beacon tip */}
-          <mesh position={[0, 0.065, 0]}>
-            <sphereGeometry args={[0.008, 8, 8]} />
+          <mesh position={[0, 0.04, 0]}>
+            <sphereGeometry args={[0.005, 6, 6]} />
             <meshBasicMaterial color="#67e8f9" />
           </mesh>
         </group>
@@ -142,7 +142,7 @@ function SingleMarker({
         <group rotation={[0.2, 0.4, 0]}>
           {/* Fuselage cylinder */}
           <mesh rotation={[0, 0, Math.PI / 2]}>
-            <cylinderGeometry args={[0.02, 0.02, 0.09, 12]} />
+            <cylinderGeometry args={[0.013, 0.013, 0.058, 8]} />
             <meshStandardMaterial
               color="#22d3a0"
               emissive="#059669"
@@ -153,18 +153,18 @@ function SingleMarker({
             />
           </mesh>
           {/* Nose cone */}
-          <mesh position={[0.05, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
-            <coneGeometry args={[0.02, 0.025, 12]} />
+          <mesh position={[0.033, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
+            <coneGeometry args={[0.013, 0.016, 8]} />
             <meshStandardMaterial color="#f59e0b" />
           </mesh>
           {/* Swept wings */}
           <mesh position={[0, 0, 0]}>
-            <boxGeometry args={[0.025, 0.004, 0.11]} />
+            <boxGeometry args={[0.016, 0.003, 0.07]} />
             <meshStandardMaterial color="#d97706" />
           </mesh>
           {/* Vertical stabilizer */}
-          <mesh position={[-0.04, 0.02, 0]}>
-            <boxGeometry args={[0.02, 0.025, 0.003]} />
+          <mesh position={[-0.025, 0.013, 0]}>
+            <boxGeometry args={[0.013, 0.016, 0.002]} />
             <meshStandardMaterial color="#d97706" />
           </mesh>
         </group>
@@ -174,13 +174,13 @@ function SingleMarker({
       {obs.type === 'ctd' && (
         <group>
           {/* Base mooring anchor disc */}
-          <mesh position={[0, -0.015, 0]}>
-            <cylinderGeometry args={[0.035, 0.04, 0.015, 12]} />
+          <mesh position={[0, -0.009, 0]}>
+            <cylinderGeometry args={[0.022, 0.025, 0.009, 8]} />
             <meshStandardMaterial color="#b45309" roughness={0.4} />
           </mesh>
           {/* Vertical sensor cage frame */}
-          <mesh position={[0, 0.02, 0]}>
-            <cylinderGeometry args={[0.025, 0.025, 0.055, 8]} />
+          <mesh position={[0, 0.013, 0]}>
+            <cylinderGeometry args={[0.016, 0.016, 0.034, 6]} />
             <meshStandardMaterial
               color="#f59e0b"
               emissive="#d97706"
@@ -191,8 +191,8 @@ function SingleMarker({
             />
           </mesh>
           {/* Top station beacon */}
-          <mesh position={[0, 0.055, 0]}>
-            <octahedronGeometry args={[0.016]} />
+          <mesh position={[0, 0.035, 0]}>
+            <octahedronGeometry args={[0.010]} />
             <meshBasicMaterial color="#fbbf24" />
           </mesh>
         </group>
@@ -202,18 +202,18 @@ function SingleMarker({
       {obs.type === 'omni_buoy' && (
         <group>
           {/* Conical yellow floating hull */}
-          <mesh position={[0, -0.01, 0]}>
-            <cylinderGeometry args={[0.045, 0.025, 0.035, 16]} />
+          <mesh position={[0, -0.007, 0]}>
+            <cylinderGeometry args={[0.028, 0.016, 0.022, 10]} />
             <meshStandardMaterial color="#eab308" emissive="#ca8a04" emissiveIntensity={0.5} roughness={0.3} />
           </mesh>
           {/* Meteorological lattice tower */}
-          <mesh position={[0, 0.035, 0]}>
-            <cylinderGeometry args={[0.015, 0.025, 0.06, 4]} />
+          <mesh position={[0, 0.022, 0]}>
+            <cylinderGeometry args={[0.009, 0.016, 0.038, 4]} />
             <meshStandardMaterial color="#f8fafc" wireframe={false} metalness={0.7} />
           </mesh>
           {/* Top weather sensor / anemometer */}
-          <mesh position={[0, 0.075, 0]}>
-            <sphereGeometry args={[0.012, 8, 8]} />
+          <mesh position={[0, 0.047, 0]}>
+            <sphereGeometry args={[0.008, 6, 6]} />
             <meshBasicMaterial color="#38bdf8" />
           </mesh>
         </group>
@@ -224,17 +224,17 @@ function SingleMarker({
         <group>
           {/* Sphere body */}
           <mesh>
-            <sphereGeometry args={[0.038, 16, 16]} />
+            <sphereGeometry args={[0.024, 12, 12]} />
             <meshStandardMaterial color="#ef4444" emissive="#b91c1c" emissiveIntensity={0.6} roughness={0.2} />
           </mesh>
           {/* Equatorial bumper ring */}
           <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[0.038, 0.006, 8, 24]} />
+            <torusGeometry args={[0.024, 0.004, 6, 16]} />
             <meshStandardMaterial color="#1e293b" />
           </mesh>
           {/* Top antenna */}
-          <mesh position={[0, 0.04, 0]}>
-            <cylinderGeometry args={[0.002, 0.002, 0.045, 6]} />
+          <mesh position={[0, 0.025, 0]}>
+            <cylinderGeometry args={[0.0015, 0.0015, 0.028, 4]} />
             <meshStandardMaterial color="#f8fafc" />
           </mesh>
         </group>
@@ -244,18 +244,18 @@ function SingleMarker({
       {obs.type === 'tsunami_buoy' && (
         <group>
           {/* Hexagonal reinforced hull */}
-          <mesh position={[0, -0.012, 0]}>
-            <cylinderGeometry args={[0.05, 0.04, 0.04, 6]} />
+          <mesh position={[0, -0.008, 0]}>
+            <cylinderGeometry args={[0.032, 0.025, 0.025, 6]} />
             <meshStandardMaterial color="#f97316" emissive="#c2410c" emissiveIntensity={0.6} roughness={0.2} />
           </mesh>
           {/* Satcom dome */}
-          <mesh position={[0, 0.025, 0]}>
-            <sphereGeometry args={[0.025, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+          <mesh position={[0, 0.016, 0]}>
+            <sphereGeometry args={[0.016, 12, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
             <meshStandardMaterial color="#ffffff" roughness={0.1} />
           </mesh>
           {/* Flashing alert beacon */}
-          <mesh position={[0, 0.055, 0]}>
-            <sphereGeometry args={[0.009, 8, 8]} />
+          <mesh position={[0, 0.035, 0]}>
+            <sphereGeometry args={[0.006, 6, 6]} />
             <meshBasicMaterial color="#ef4444" />
           </mesh>
         </group>
@@ -265,11 +265,11 @@ function SingleMarker({
       {isSelected && (
         <group>
           <mesh ref={ringRef} rotation={[Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[0.08, 0.095, 32]} />
+            <ringGeometry args={[0.052, 0.062, 28]} />
             <meshBasicMaterial color="#38bdf8" side={THREE.DoubleSide} />
           </mesh>
           <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[0.11, 0.115, 32]} />
+            <ringGeometry args={[0.072, 0.076, 28]} />
             <meshBasicMaterial color="#f59e0b" transparent opacity={0.6} side={THREE.DoubleSide} />
           </mesh>
         </group>

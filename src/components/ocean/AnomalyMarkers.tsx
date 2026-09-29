@@ -63,20 +63,22 @@ function SingleAnomalyRing({
         >
           <button
             onClick={() => onSelect(anomaly)}
-            title={`${anomaly.region} — ${anomaly.category} (${anomaly.anomalyValue})\nClick to focus`}
-            className={`group flex items-center gap-1 transition-all duration-200 cursor-pointer shadow-lg backdrop-blur-md rounded-full border ${
+            title={`${anomaly.region} — ${anomaly.category.toUpperCase()} (${anomaly.anomalyValue})\nClick to focus & inspect`}
+            className={`group flex items-center gap-1.5 transition-all duration-300 cursor-pointer shadow-lg backdrop-blur-md rounded-full border ${
               isHovered
-                ? 'px-2 py-0.5 bg-red-950/90 border-red-400 text-red-100 scale-110'
-                : 'px-1.5 py-0.5 bg-red-950/75 border-red-500/50 text-red-200'
+                ? 'px-2.5 py-1 bg-red-950/95 border-red-400 text-red-100 scale-110 shadow-red-500/50 ring-2 ring-red-400/40 z-30'
+                : 'p-1 bg-red-950/80 hover:bg-red-900 border-red-500/60 text-red-200'
             }`}
           >
-            <span className="relative flex h-1.5 w-1.5">
+            <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
             </span>
-            <span className="text-[9px] font-mono font-bold leading-none">
-              {isHovered ? `⚠️ ${anomaly.region} (${anomaly.anomalyValue})` : anomaly.anomalyValue}
-            </span>
+            {isHovered && (
+              <span className="text-[10px] font-mono font-bold whitespace-nowrap animate-fade-in">
+                {anomaly.region}: {anomaly.anomalyValue}
+              </span>
+            )}
           </button>
         </div>
       </Html>

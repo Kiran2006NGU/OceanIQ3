@@ -1,12 +1,10 @@
 /**
- * CelestialStarField.tsx — Refined Clustered Celestial Starfield
- * SIH 26067 | OceanIQ — Indian Ocean 3D Intelligence Platform
- *
- * Renders a natural, realistic celestial starfield:
- * - Concentrated along a diagonal galactic band (Milky Way arc) rather than everywhere uniformly
- * - Clean cosmic voids leaving empty space for visual clarity
- * - Soft, anti-aliased circular point texture (no square artifacts)
- * - Automatically hidden in 'light' (Maritime Light) theme for clean daylight presentation
+ * CelestialStarField.tsx — Deep Cosmic Skybox & Pinpoint Multi-Magnitude Starfield
+ * Faithfully matches Sketchfab Earth Globe celestial aesthetics:
+ * - Deep cosmos starry skybox with faint interstellar dust & nebula clouds
+ * - 4,000 multi-magnitude, anti-aliased 3D point stars with realistic spectral color temperature
+ * - True 3D celestial sphere with subtle parallax during orbit/pan
+ * - Smooth, serene cosmic drift
  */
 
 import { useMemo, useRef } from 'react'
@@ -21,136 +19,177 @@ interface CelestialStarFieldProps {
 export function CelestialStarField({ visible = true }: CelestialStarFieldProps) {
   const { theme } = useTheme()
   const pointsRef = useRef<THREE.Points>(null)
+  const skyboxRef = useRef<THREE.Mesh>(null)
 
   // In light/daylight mode, do not render stars
   const isEnabled = visible && theme !== 'light'
 
-  // Soft circular star texture
+  // ── 1. Equirectangular Deep Cosmic Nebula Skybox Texture ─────────────────
+  const skyboxTexture = useMemo(() => {
+    const loader = new THREE.TextureLoader()
+    const tex = loader.load('/textures/night-sky.png')
+    tex.colorSpace = THREE.SRGBColorSpace
+    tex.mapping = THREE.EquirectangularReflectionMapping
+    return tex
+  }, [])
+
+  // ── 2. Anti-Aliased Circular Pinpoint Star Texture ────────────────────────
   const starTexture = useMemo(() => {
     const canvas = document.createElement('canvas')
-    canvas.width = 32
-    canvas.height = 32
+    canvas.width = 64
+    canvas.height = 64
     const ctx = canvas.getContext('2d')
     if (!ctx) return null
 
-    const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16)
-    grad.addColorStop(0, 'rgba(255, 255, 255, 1)')
-    grad.addColorStop(0.2, 'rgba(210, 235, 255, 0.85)')
-    grad.addColorStop(0.6, 'rgba(125, 185, 255, 0.25)')
-    grad.addColorStop(1, 'rgba(0, 0, 0, 0)')
+    // Draw crisp, bright star core with realistic Gaussian falloff
+    const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 30)
+    grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)')
+    grad.addColorStop(0.12, 'rgba(255, 255, 255, 0.95)')
+    grad.addColorStop(0.35, 'rgba(220, 240, 255, 0.55)')
+    grad.addColorStop(0.7, 'rgba(140, 195, 255, 0.12)')
+    grad.addColorStop(1.0, 'rgba(0, 0, 0, 0)')
 
     ctx.fillStyle = grad
-    ctx.fillRect(0, 0, 32, 32)
+    ctx.fillRect(0, 0, 64, 64)
+
     const texture = new THREE.CanvasTexture(canvas)
+    texture.minFilter = THREE.LinearMipmapLinearFilter
+    texture.magFilter = THREE.LinearFilter
     return texture
   }, [])
 
-  // Generate clustered galactic band stars (concentrated in a scenic arc, not everywhere)
+  // ── 3. Generate 3,800 Multi-Magnitude 3D Stars Across Sphere ─────────────
   const { positions, colors, sizes } = useMemo(() => {
-    const count = 900 // Tasteful, balanced density
+    const count = 3800
     const positions = new Float32Array(count * 3)
     const colors = new Float32Array(count * 3)
     const sizes = new Float32Array(count)
 
-    // Galactic plane rotation matrix (tilted 35° diagonally across background)
-    const tilt = THREE.MathUtils.degToRad(35)
+    // Galactic band tilt (32 degrees)
+    const tilt = THREE.MathUtils.degToRad(32)
     const cosT = Math.cos(tilt)
     const sinT = Math.sin(tilt)
 
     for (let i = 0; i < count; i++) {
-      // 80% concentrated along a diagonal galactic band, 20% gentle ambient scatter
-      const isBand = i < count * 0.8
+      // 60% clustered along realistic Milky Way band, 40% uniform spherical scatter
+      const isBand = i < count * 0.6
 
       let theta: number
       let phi: number
       let radius: number
 
       if (isBand) {
-        // Longitude along the celestial arc (clustered Milky Way band)
-        theta = (Math.random() - 0.5) * Math.PI * 1.6
-        // Latitude concentrated near band with Gaussian spread
-        const u1 = Math.random()
+        theta = (Math.random() - 0.5) * Math.PI * 2
+        // Safe Box-Muller Gaussian distribution along celestial equator
+        const u1 = Math.max(1e-6, Math.min(0.999999, Math.random()))
         const u2 = Math.random()
-        const gaussian = Math.sqrt(-2.0 * Math.log(u1 + 0.0001)) * Math.cos(2.0 * Math.PI * u2)
-        phi = gaussian * 0.22 // Scenic band (~12-18 degrees)
-        radius = 36 + Math.random() * 26 // Well within camera far plane (100) and outside Earth (2)
+        const gaussian = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2)
+        phi = (isFinite(gaussian) ? gaussian : 0) * 0.28
+        radius = 55 + Math.random() * 35
       } else {
-        // Faint occasional background anchors (sparse, not everywhere)
         theta = Math.random() * Math.PI * 2
-        phi = (Math.random() - 0.5) * Math.PI * 0.85
-        radius = 42 + Math.random() * 22
+        phi = Math.asin(Math.max(-1, Math.min(1, (Math.random() - 0.5) * 2)))
+        radius = 50 + Math.random() * 40
       }
 
-      // Convert spherical to Cartesian
+      // Spherical to Cartesian
       const x = radius * Math.cos(phi) * Math.cos(theta)
       const y = radius * Math.sin(phi)
       const z = radius * Math.cos(phi) * Math.sin(theta)
 
-      // Apply tilt to align diagonally
+      // Apply galactic tilt
       const yTilted = y * cosT - z * sinT
       const zTilted = y * sinT + z * cosT
 
-      positions[i * 3] = x
-      positions[i * 3 + 1] = yTilted
-      positions[i * 3 + 2] = zTilted
+      positions[i * 3] = isFinite(x) ? x : 0
+      positions[i * 3 + 1] = isFinite(yTilted) ? yTilted : 0
+      positions[i * 3 + 2] = isFinite(zTilted) ? zTilted : 0
 
-      // Subtle varied natural star hues (white, pale blue, soft gold)
-      const colorType = Math.random()
-      if (colorType > 0.8) {
-        // Soft golden/warm star
-        colors[i * 3] = 1.0
-        colors[i * 3 + 1] = 0.92
-        colors[i * 3 + 2] = 0.78
-      } else if (colorType > 0.35) {
-        // Ice blue/cyan star
-        colors[i * 3] = 0.75
-        colors[i * 3 + 1] = 0.92
+      // Realistic Stellar Spectral Classification Colors
+      const randColor = Math.random()
+      if (randColor < 0.2) {
+        // Class O/B: Sapphire ice blue
+        colors[i * 3] = 0.72
+        colors[i * 3 + 1] = 0.86
         colors[i * 3 + 2] = 1.0
-      } else {
-        // Crisp pure white
+      } else if (randColor < 0.65) {
+        // Class A/F: Pure diamond white
         colors[i * 3] = 0.96
         colors[i * 3 + 1] = 0.98
         colors[i * 3 + 2] = 1.0
+      } else if (randColor < 0.9) {
+        // Class G/K: Warm solar gold / amber
+        colors[i * 3] = 1.0
+        colors[i * 3 + 1] = 0.91
+        colors[i * 3 + 2] = 0.75
+      } else {
+        // Class M: Soft reddish dwarf
+        colors[i * 3] = 1.0
+        colors[i * 3 + 1] = 0.78
+        colors[i * 3 + 2] = 0.68
       }
 
-      // Varied size for celestial depth
-      sizes[i] = isBand ? 1.4 + Math.random() * 1.8 : 0.8 + Math.random() * 1.0
+      // Apparent Stellar Magnitude Hierarchy
+      const randMag = Math.random()
+      if (randMag > 0.96) {
+        // Major bright landmark stars (Vega, Sirius, Rigel style)
+        sizes[i] = 2.4 + Math.random() * 1.2
+      } else if (randMag > 0.78) {
+        // Medium bright stars
+        sizes[i] = 1.5 + Math.random() * 0.8
+      } else {
+        // Faint distant background pinpoints
+        sizes[i] = 0.75 + Math.random() * 0.65
+      }
     }
 
     return { positions, colors, sizes }
   }, [])
 
-  // Slow, serene cosmic drift
+  // Serene cosmic drift
   useFrame((_, delta) => {
     if (pointsRef.current) {
-      pointsRef.current.rotation.y += delta * 0.003
+      pointsRef.current.rotation.y += delta * 0.0015
+    }
+    if (skyboxRef.current) {
+      skyboxRef.current.rotation.y += delta * 0.0008
     }
   })
 
   if (!isEnabled) return null
 
   return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[positions, 3]}
+    <group name="CelestialUniverse">
+      {/* ── 1. Distant Cosmic Skybox Sphere (Faint interstellar dust & galaxies) ── */}
+      <mesh ref={skyboxRef} scale={[-1, 1, 1]}>
+        <sphereGeometry args={[95, 48, 32]} />
+        <meshBasicMaterial
+          map={skyboxTexture}
+          side={THREE.BackSide}
+          transparent={true}
+          opacity={0.32}
+          color="#a8c0e8"
+          depthWrite={false}
         />
-        <bufferAttribute
-          attach="attributes-color"
-          args={[colors, 3]}
+      </mesh>
+
+      {/* ── 2. 3D Pinpoint Multi-Magnitude Starfield ── */}
+      <points ref={pointsRef} frustumCulled={false}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+          <bufferAttribute attach="attributes-color" args={[colors, 3]} />
+        </bufferGeometry>
+        <pointsMaterial
+          size={1.6}
+          sizeAttenuation={true}
+          vertexColors={true}
+          map={starTexture ?? undefined}
+          transparent={true}
+          opacity={0.92}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
         />
-      </bufferGeometry>
-      <pointsMaterial
-        size={1.6}
-        sizeAttenuation={true}
-        vertexColors={true}
-        map={starTexture ?? undefined}
-        transparent={true}
-        opacity={0.82}
-        depthWrite={false}
-        blending={THREE.AdditiveBlending}
-      />
-    </points>
+      </points>
+    </group>
   )
 }
