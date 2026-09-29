@@ -29,12 +29,23 @@ DATASET_REGISTRY: dict[str, Path] = {
 
 # ── CORS ───────────────────────────────────────────────────────────────────────
 
-# Explicit origins for CORS — do NOT use wildcard in this list
-CORS_ORIGINS: list[str] = [
-    "http://localhost:5173",   # Vite dev server (default port)
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",   # alternate React dev port
-]
+# Explicit origins for CORS
+import os
+import json
+
+_raw_cors = os.getenv("CORS_ORIGINS")
+if _raw_cors:
+    try:
+        CORS_ORIGINS: list[str] = json.loads(_raw_cors) if _raw_cors.strip().startswith("[") else [o.strip() for o in _raw_cors.split(",")]
+    except Exception:
+        CORS_ORIGINS = ["*"]
+else:
+    CORS_ORIGINS = [
+        "http://localhost:5173",   # Vite dev server (default port)
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",   # alternate React dev port
+        "*",                       # Allow cloud deployments (Render, Vercel, etc.)
+    ]
 
 # ── API metadata ───────────────────────────────────────────────────────────────
 

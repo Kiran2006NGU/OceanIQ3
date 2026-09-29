@@ -92,13 +92,40 @@ app.include_router(aqua_vis.router,        prefix="/api")
 
 
 
-# ── Root redirect ──────────────────────────────────────────────────────────────
+# ── Static Files (Production Frontend Bundle) ───────────────────────────────────
 
-@app.get("/", include_in_schema=False)
-async def root():
-    return {
-        "service": "SIH 26067 Ocean Intelligence Platform",
-        "version": API_VERSION,
-        "docs": "/docs",
-        "health": f"{API_PREFIX}/health",
-    }
+from pathlib import Path
+from fastapi import HTTPException
+from fastapi.staticfiles import StaticFiles
+from starlette.responses import FileResponse
+
+DIST_DIR = Path(__file__).resolve().parent.parent.parent / "dist"
+if not DIST_DIR.exists():
+    DIST_DIR = Path("/app/dist")
+
+if DIST_DIR.exists() and (DIST_DIR / "index.html").exists():
+    assets_dir = DIST_DIR / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+
+    @app.get("/", include_in_schema=False)
+    async def serve_root():
+        return FileResponse(DIST_DIR / "index.html")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_spa(full_path: str):
+        if full_path.startswith(("api/", "api", "docs", "redoc", "openapi.json")):
+            raise HTTPException(status_code=404, detail="Not Found")
+        file_path = DIST_DIR / full_path
+        if file_path.is_file():
+            return FileResponse(file_path)
+        return FileResponse(DIST_DIR / "index.html")
+else:
+    @app.get("/", include_in_schema=False)
+    async def root():
+        return {
+            "service": "SIH 26067 Ocean Intelligence Platform",
+            "version": API_VERSION,
+            "docs": "/docs",
+            "health": f"{API_PREFIX}/health",
+        }

@@ -33,8 +33,9 @@ COPY --from=frontend-builder /app/dist ./dist
 ENV PORT=8000
 ENV HOST=0.0.0.0
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app/backend:/app
 
 EXPOSE 8000
 
 # Start FastAPI backend
-CMD ["python", "-m", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "python -m uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port ${PORT:-8000}"]
